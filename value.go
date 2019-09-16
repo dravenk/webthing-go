@@ -12,7 +12,7 @@ import "fmt"
 // new value.
 type Value struct {
 	lastValue      interface{}
-	valueForwarder []func(...interface{})
+	valueForwarder []func(interface{})
 }
 
 // NewValue Initialize the object.
@@ -20,7 +20,7 @@ type Value struct {
 // @param {*} initialValue The initial value
 // @param {function?} valueForwarder The method that updates the actual value
 //                                   on the thing
-func NewValue(initialValue interface{}, valueForwarder ...func(...interface{})) Value {
+func NewValue(initialValue interface{}, valueForwarder ...func(interface{})) Value {
 	return Value{initialValue, valueForwarder}
 }
 

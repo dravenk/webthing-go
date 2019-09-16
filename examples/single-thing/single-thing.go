@@ -171,6 +171,6 @@ func (toggle *ToggleAction) Cancel() *webthing.Action {
 	return toggle.Action
 }
 
-func onValueForwarder(i ...interface{}) {
+func onValueForwarder(i interface{}) {
 	fmt.Println("Now on statue: ", i)
 }

@@ -17,7 +17,7 @@ func makeThing() *webthing.Thing {
 		[]string{"OnOffSwitch"},
 		"An actuator example that just log")
 
-	value := webthing.NewValue(true, func(i ...interface{}) {
+	value := webthing.NewValue(true, func(i interface{}) {
 		fmt.Println("Change: ", i)
 	})
 	meta := []byte(`{
