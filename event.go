@@ -13,7 +13,7 @@ type Event struct {
 	time  string
 }
 
-// EventObject An event object describes a kind of event which may be emitted by a device. 
+// EventObject An event object describes a kind of event which may be emitted by a device.
 // See https://iot.mozilla.org/wot/#event-object
 type EventObject struct {
 	AtType      string `json:"@type,omitempty"`
@@ -59,7 +59,7 @@ func (event *Event) AsEventDescription() []byte {
 
 }
 
-// Thing Get the thing associated with this event. 
+// Thing Get the thing associated with this event.
 // @returns {Object} The thing.
 func (event *Event) Thing() *Thing {
 	return event.thing
@@ -70,7 +70,6 @@ func (event *Event) Thing() *Thing {
 func (event *Event) Name() string {
 	return event.name
 }
-
 
 // Data Get the event's data.
 // @returns {*} The data.

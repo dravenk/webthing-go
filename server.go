@@ -138,17 +138,17 @@ func NewSingleThing(thing *Thing) *SingleThing {
 }
 
 // Thing Get the thing at the given index.
-func (st SingleThing) Thing(idx int) *Thing {
+func (st *SingleThing) Thing(idx int) *Thing {
 	return st.thing
 }
 
 // Things Get the list of things.
-func (st SingleThing) Things() []*Thing {
+func (st *SingleThing) Things() []*Thing {
 	return []*Thing{st.thing}
 }
 
 // Name Get the mDNS server name.
-func (st SingleThing) Name() string {
+func (st *SingleThing) Name() string {
 	return st.thing.title
 }
 
@@ -173,17 +173,17 @@ func NewMultipleThings(things []*Thing, name string) *MultipleThings {
 // Thing Get the thing at the given index.
 //
 // @param {Number|String} idx The index
-func (mt MultipleThings) Thing(idx int) *Thing {
+func (mt *MultipleThings) Thing(idx int) *Thing {
 	return mt.things[idx]
 }
 
 // Things Get the list of things.
-func (mt MultipleThings) Things() []*Thing {
+func (mt *MultipleThings) Things() []*Thing {
 	return mt.things
 }
 
 // Name Get the mDNS server name.
-func (mt MultipleThings) Name() string {
+func (mt *MultipleThings) Name() string {
 	return mt.name
 }
 
@@ -219,10 +219,10 @@ func (h *ThingsHandle) Handle(w http.ResponseWriter, r *http.Request) {
 	BaseHandle(h, w, r)
 }
 
-func (h ThingsHandle) Get(w http.ResponseWriter, r *http.Request) {
+func (h *ThingsHandle) Get(w http.ResponseWriter, r *http.Request) {
 
 	if len(h.Things) == 1 {
-		thingHandle := ThingHandle{h.Things[0]}
+		thingHandle := &ThingHandle{h.Things[0]}
 		thingHandle.Handle(w, r)
 		return
 	}
@@ -239,9 +239,9 @@ func (h ThingsHandle) Get(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func (h ThingsHandle) Post(w http.ResponseWriter, r *http.Request)   {}
-func (h ThingsHandle) Put(w http.ResponseWriter, r *http.Request)    {}
-func (h ThingsHandle) Delete(w http.ResponseWriter, r *http.Request) {}
+func (h *ThingsHandle) Post(w http.ResponseWriter, r *http.Request)   {}
+func (h *ThingsHandle) Put(w http.ResponseWriter, r *http.Request)    {}
+func (h *ThingsHandle) Delete(w http.ResponseWriter, r *http.Request) {}
 
 type ThingHandle struct {
 	*Thing
