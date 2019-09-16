@@ -1,6 +1,11 @@
 Web of Things 
 ---
  
+ [![GoDoc](https://godoc.org/github.com/dravenk/webthing-go?status.png)](https://godoc.org/github.com/dravenk/webthing-go) 
+ [![travis](https://travis-ci.org/dravenk/webthing-go.svg?branch=master)](https://travis-ci.org/dravenk/webthing-go) 
+ [![coveralls](https://coveralls.io/repos/dravenk/webthing-go/badge.svg?branch=master&service=github)](https://coveralls.io/github/dravenk/webthing-go?branch=master)
+ [![Go Report Card](https://goreportcard.com/badge/github.com/dravenk/webthing-go)](https://goreportcard.com/report/github.com/dravenk/webthing-go)
+ 
 ### USAGE:  
 To get started look at [examples](https://github.com/dravenk/webthing-go/tree/master/examples) directory:
 ```
