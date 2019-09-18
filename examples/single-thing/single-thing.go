@@ -25,7 +25,7 @@ func main() {
 func MakeThing() *webthing.Thing {
 	// Create a Lamp.
 	thing := webthing.NewThing("urn:dev:ops:my-thing-1234",
-		"My Lamp",
+		"Lamp",
 		[]string{"OnOffSwitch", "Light"},
 		"A web connected thing")
 
@@ -113,24 +113,25 @@ func (fade *FadeAction) Generator(thing *webthing.Thing) *webthing.Action {
 func (fade *FadeAction) PerformAction() *webthing.Action {
 	fmt.Println("Perform fade action…...: ", fade.Name(), " | UUID: ", fade.ID())
 	thing := fade.Thing()
-	body, _ := fade.Input().MarshalJSON()
+	params, _ := fade.Input().MarshalJSON()
 
-	args := make(map[string]map[string]interface{})
-	if err := json.Unmarshal(body, &args); err != nil {
+	input := make(map[string]interface{})
+	if err := json.Unmarshal(params, &input); err != nil {
 		fmt.Println(err)
 	}
-	if brightness, ok := args["input"]["brightness"]; ok {
+	if brightness, ok := input["brightness"]; ok {
 		fmt.Println("Set brightness value: ", brightness)
 		thing.Property("brightness").Set(brightness)
 	}
-	if duration, ok := args["input"]["duration"]; ok {
+	if duration, ok := input["duration"]; ok {
 		fmt.Println("Fade duration: ", duration)
 		time.Sleep(time.Duration(int64(duration.(float64))) * time.Millisecond)
 	}
 
 	value := rand.Intn(100)
-	eve := webthing.NewEvent(thing, "overheated", []byte(fmt.Sprintln(value)))
-	thing.AddEvent(eve)
+	event := webthing.NewEvent(thing, "overheated", []byte(fmt.Sprintln(value)))
+	thing.AddEvent(event)
+
 	fmt.Println("Fade action Done...", fade.Name())
 	return fade.Action
 }
@@ -159,8 +160,8 @@ func (toggle *ToggleAction) PerformAction() *webthing.Action {
 	on := property.Get().(bool)
 	property.Set(!on)
 
-	eve := webthing.NewEvent(thing, "overheated", []byte(fmt.Sprintln(rand.Intn(100))))
-	thing.AddEvent(eve)
+	event := webthing.NewEvent(thing, "overheated", []byte(fmt.Sprintln(rand.Intn(100))))
+	thing.AddEvent(event)
 
 	fmt.Println("Toggle action done...")
 	return toggle.Action

@@ -382,7 +382,7 @@ func (h *ActionsHandle) Get(w http.ResponseWriter, r *http.Request) {
 func (h *ActionsHandle) Post(w http.ResponseWriter, r *http.Request) {
 	body, _ := ioutil.ReadAll(r.Body)
 
-	var obj map[string]*json.RawMessage
+	var obj map[string]map[string]*json.RawMessage
 	err := json.Unmarshal(body, &obj)
 	if err != nil {
 		w.WriteHeader(400)
@@ -390,10 +390,10 @@ func (h *ActionsHandle) Post(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for name, input := range obj {
+	for name, params := range obj {
 		if _, ok := h.Thing.actions[name]; ok {
+			input := params["input"]
 			action := h.Thing.PerformAction(name, input)
-
 			// Perform an Action in a goroutine.
 			go action.Start()
 

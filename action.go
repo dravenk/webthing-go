@@ -82,8 +82,14 @@ func NewAction(id string, thing *Thing, name string, input *json.RawMessage, Per
 // @return Description of the action as a JSONObject.
 func (action *Action) AsActionDescription() []byte {
 	obj := make(map[string]interface{})
-	if action.Input() != nil {
-		obj[action.Name()] = action.Input()
+
+
+	obj[action.Name()]= make(map[string]*json.RawMessage)
+
+	if input := action.Input(); input != nil {
+		meta := make(map[string]*json.RawMessage)
+		meta["input"] = input
+		obj[action.Name()] = meta
 	}
 	if action.TimeCompleted() != "" {
 		obj["timeCompleted"] = action.TimeCompleted()
@@ -91,7 +97,6 @@ func (action *Action) AsActionDescription() []byte {
 	obj["href"] = action.href
 	obj["status"] = action.Status()
 	obj["timeRequested"] = action.TimeRequested()
-
 	description, err := json.Marshal(obj)
 	if err != nil {
 		fmt.Println("Error: ", err.Error())
