@@ -325,7 +325,6 @@ func (thing *Thing) Action(actionName, actionID string) (action *Action) {
 		return nil
 	}
 	for _, ac := range thing.actions[actionName] {
-		// Todo
 		// Each newly created action must contain a new uuid,
 		// otherwise a random action with the same uuid will be found and returned.
 		if ac.ID() == actionID {

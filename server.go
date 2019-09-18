@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"regexp"
 	"strconv"
 )
 
@@ -60,18 +61,14 @@ func NewWebThingServer(thingType ThingsType, httpServer *http.Server) *ThingServ
 			http.HandleFunc(basePath+"/"+thingName+"/properties/"+name, propertyHandle.Handle)
 		}
 
-		for actionName, actions := range thing.actions {
+		for actionName := range thing.actions {
 			actionHandle := &ActionHandle{actionsHandle, actionName}
 			http.HandleFunc(basePath+"/"+thingIdx+"/actions/"+actionName, actionHandle.Handle)
 			http.HandleFunc(basePath+"/"+thingName+"/actions/"+actionName, actionHandle.Handle)
 
-			// Todo
-			for _, action := range actions {
-				actionID := action.ID()
-				actionIDHandle := ActionIDHandle{actionHandle, action, actionID}
-				http.HandleFunc(basePath+"/"+thingIdx+"/actions/"+actionName+"/"+actionID, actionIDHandle.Handle)
-				http.HandleFunc(basePath+"/"+thingName+"/actions/"+actionName+"/"+actionID, actionIDHandle.Handle)
-			}
+			actionIDHandle := &ActionIDHandle{actionHandle}
+			http.HandleFunc(basePath+"/"+thingIdx+"/actions/"+actionName+"/", actionIDHandle.Handle)
+			http.HandleFunc(basePath+"/"+thingName+"/actions/"+actionName+"/", actionIDHandle.Handle)
 
 		}
 
@@ -442,19 +439,47 @@ func (h *ActionHandle) Delete(w http.ResponseWriter, r *http.Request) {}
 // ActionIDHandle Handle a request to /actions/<action_name>/<action_id>.
 type ActionIDHandle struct {
 	*ActionHandle
-	*Action
-	ActionID string
+}
+
+func (h *ActionIDHandle) Handle(w http.ResponseWriter, r *http.Request) {
+	BaseHandle(h, w, r)
+}
+
+func (h *ActionIDHandle)MatchActionID(path string) (actionID string,bool bool)  {
+	re := regexp.MustCompile(`/things/(.*)/actions/(.*)`+`/(.*)`)
+	if re.MatchString(path) {
+		name := re.FindStringSubmatch(path)
+		if len(path) >= 4 {
+			return name[3],true
+		}
+	}
+	return
 }
 
 func (h *ActionIDHandle) Get(w http.ResponseWriter, r *http.Request) {
-	content, _ := json.Marshal(h.AsActionDescription())
-	if _, err := w.Write(content); err != nil {
-		fmt.Println(err)
+	if actionID, ok := h.MatchActionID(r.RequestURI); ok {
+		action := h.Thing.Action(h.ActionName,actionID)
+		if action != nil {
+			if _, err := w.Write(action.AsActionDescription()); err != nil {
+				fmt.Println(err)
+			}
+			return
+		}
 	}
+	w.WriteHeader(400)
 }
+
 func (h *ActionIDHandle) Post(w http.ResponseWriter, r *http.Request)   {}
 func (h *ActionIDHandle) Put(w http.ResponseWriter, r *http.Request)    {}
-func (h *ActionIDHandle) Delete(w http.ResponseWriter, r *http.Request) {}
+func (h *ActionIDHandle) Delete(w http.ResponseWriter, r *http.Request) {
+	if actionID, ok := h.MatchActionID(r.RequestURI); ok {
+		if  h.Thing.RemoveAction(h.ActionName,actionID) {
+			w.Write([]byte(`204 No Content`))
+			w.WriteHeader(204)
+			return
+		}
+	}
+}
 
 // Handle a request to /actions.
 type EventsHandle struct {
