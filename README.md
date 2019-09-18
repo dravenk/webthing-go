@@ -18,14 +18,19 @@ To get started look at [examples](https://github.com/dravenk/webthing-go/tree/ma
  go run examples/single-thing/single-thing.go
  
  # The default address is http://localhost:8888/things
- # Example: Get a description of a Thing
  curl --request GET --url http://localhost:8888/things
- # Or
- curl --request GET --url http://localhost:8888/things/0
  
+ # Example: Get a description of a Thing
+ # use the Thing index.
+ curl --request GET --url http://localhost:8888/things/0
+ # Or use the Thing title.
+ curl --request GET --url http://localhost:8888/things/Lamp
+
  # Example: Get all properties
  curl --request GET --url http://localhost:8888/things/0/properties
- 
+ # Or
+ curl --request GET --url http://localhost:8888/things/Lamp/properties
+
  # Example: Get a property
  curl --request GET --url http://localhost:8888/things/0/properties/brightness
  
@@ -38,7 +43,11 @@ To get started look at [examples](https://github.com/dravenk/webthing-go/tree/ma
  curl --request POST \
    --url http://localhost:8888/things/0/actions \
    --data '{"fade":{"input":{"brightness":55,"duration":2000}}}'
- 
+
+ # Example: Cancel an Action Request
+    curl --request DELETE \
+      --url http://localhost:8888/things/0/actions/fade/{action_id}
+
  # Example: Action Request
  curl --request POST \
    --url http://localhost:8888/things/0/actions \
@@ -48,9 +57,14 @@ To get started look at [examples](https://github.com/dravenk/webthing-go/tree/ma
  curl --request GET \
    --url http://localhost:8888/things/0/actions
    
- # Example: Event Log
+ # Example: Events Request
  curl --request GET \
    --url http://localhost:8888/things/0/events
+   
+  # Example: Event Request
+  curl --request GET \
+    --url http://localhost:8888/things/0/events/overheated
+
 ```
 
 
