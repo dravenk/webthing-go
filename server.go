@@ -72,12 +72,9 @@ func NewWebThingServer(thingType ThingsType, httpServer *http.Server) *ThingServ
 
 		}
 
-		// todo
-		for _, event := range thing.events {
-			eventHandle := &EventHandle{eventsHandle,event}
-			http.HandleFunc(basePath+"/"+thingIdx+"/events/"+event.Name(), eventHandle.Handle)
-			http.HandleFunc(basePath+"/"+thingName+"/events/"+event.Name(), eventHandle.Handle)
-		}
+		eventHandle := &EventHandle{eventsHandle}
+		http.HandleFunc(basePath+"/"+thingIdx+"/events/", eventHandle.Handle)
+		http.HandleFunc(basePath+"/"+thingName+"/events/", eventHandle.Handle)
 
 	}
 
@@ -445,12 +442,12 @@ func (h *ActionIDHandle) Handle(w http.ResponseWriter, r *http.Request) {
 	BaseHandle(h, w, r)
 }
 
-func (h *ActionIDHandle)MatchActionID(path string) (actionID string,bool bool)  {
-	re := regexp.MustCompile(`/things/(.*)/actions/(.*)`+`/(.*)`)
+func (h *ActionIDHandle) MatchActionID(path string) (actionID string, bool bool) {
+	re := regexp.MustCompile(`/things/(.*)/actions/(.*)` + `/(.*)`)
 	if re.MatchString(path) {
 		name := re.FindStringSubmatch(path)
 		if len(path) >= 4 {
-			return name[3],true
+			return name[3], true
 		}
 	}
 	return
@@ -458,7 +455,7 @@ func (h *ActionIDHandle)MatchActionID(path string) (actionID string,bool bool)  
 
 func (h *ActionIDHandle) Get(w http.ResponseWriter, r *http.Request) {
 	if actionID, ok := h.MatchActionID(r.RequestURI); ok {
-		action := h.Thing.Action(h.ActionName,actionID)
+		action := h.Thing.Action(h.ActionName, actionID)
 		if action != nil {
 			if _, err := w.Write(action.AsActionDescription()); err != nil {
 				fmt.Println(err)
@@ -469,11 +466,11 @@ func (h *ActionIDHandle) Get(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(400)
 }
 
-func (h *ActionIDHandle) Post(w http.ResponseWriter, r *http.Request)   {}
-func (h *ActionIDHandle) Put(w http.ResponseWriter, r *http.Request)    {}
+func (h *ActionIDHandle) Post(w http.ResponseWriter, r *http.Request) {}
+func (h *ActionIDHandle) Put(w http.ResponseWriter, r *http.Request)  {}
 func (h *ActionIDHandle) Delete(w http.ResponseWriter, r *http.Request) {
 	if actionID, ok := h.MatchActionID(r.RequestURI); ok {
-		if  h.Thing.RemoveAction(h.ActionName,actionID) {
+		if h.Thing.RemoveAction(h.ActionName, actionID) {
 			w.Write([]byte(`204 No Content`))
 			w.WriteHeader(204)
 			return
@@ -506,7 +503,6 @@ func (h *EventsHandle) Delete(w http.ResponseWriter, r *http.Request) {}
 // Handle a request to /actions.
 type EventHandle struct {
 	*EventsHandle
-	*Event
 }
 
 func (h *EventHandle) Handle(w http.ResponseWriter, r *http.Request) {
@@ -518,10 +514,22 @@ func (h *EventHandle) Handle(w http.ResponseWriter, r *http.Request) {
 // @param {Object} r The request object
 // @param {Object} w The response object
 func (h *EventHandle) Get(w http.ResponseWriter, r *http.Request) {
-	if _, err := w.Write(h.Event.AsEventDescription()); err != nil {
-		fmt.Println(err)
+	if eventName, ok := h.MatchEventName(r.RequestURI); ok {
+		w.Write([]byte(h.Thing.EventDescriptions(eventName)))
 	}
 }
+
+func (h *EventHandle) MatchEventName(path string) (eventName string, bool bool) {
+	re := regexp.MustCompile(`/things/(.*)/events/(.*)`)
+	if re.MatchString(path) {
+		name := re.FindStringSubmatch(path)
+		if len(path) >= 3 {
+			return name[2], true
+		}
+	}
+	return
+}
+
 func (h *EventHandle) Post(w http.ResponseWriter, r *http.Request)   {}
 func (h *EventHandle) Put(w http.ResponseWriter, r *http.Request)    {}
 func (h *EventHandle) Delete(w http.ResponseWriter, r *http.Request) {}
