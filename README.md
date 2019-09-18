@@ -47,6 +47,10 @@ To get started look at [examples](https://github.com/dravenk/webthing-go/tree/ma
  # Example: Actions Queue
  curl --request GET \
    --url http://localhost:8888/things/0/actions
+   
+ # Example: Event Log
+ curl --request GET \
+   --url http://localhost:8888/things/0/events
 ```
 
 

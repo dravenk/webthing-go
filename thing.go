@@ -222,18 +222,21 @@ func (thing *Thing) ActionDescriptions(actionName string) []json.RawMessage {
 	return descriptions
 }
 
-//Get the thing's events as an array.
+// EventDescriptions Get the thing's events as an array.
 //
 //@param {String?} eventName Optional event name to get descriptions for
 //
 //@returns {Object} Event descriptions.
 func (thing *Thing) EventDescriptions(eventName string) string {
+	var descriptions  []json.RawMessage
 	for _, event := range thing.events {
-		if strings.EqualFold(event.Name(), eventName) {
-			return string(event.AsEventDescription())
+		if  eventName == "" || strings.EqualFold(event.Name(), eventName) {
+			descriptions = append(descriptions, event.AsEventDescription())
 		}
 	}
-	return ""
+
+	content , _ := json.Marshal(descriptions)
+	return string(content)
 }
 
 // Add a property to this thing.

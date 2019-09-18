@@ -50,6 +50,10 @@ func NewWebThingServer(thingType ThingsType, httpServer *http.Server) *ThingServ
 		http.HandleFunc(basePath+"/"+thingIdx+"/actions", actionsHandle.Handle)
 		http.HandleFunc(basePath+"/"+thingName+"/actions", actionsHandle.Handle)
 
+		eventsHandle := &EventsHandle{thingHandle}
+		http.HandleFunc(basePath+"/"+thingIdx+"/events", eventsHandle.Handle)
+		http.HandleFunc(basePath+"/"+thingName+"/events", eventsHandle.Handle)
+
 		for name, property := range thing.properties {
 			propertyHandle := PropertyHandle{propertiesHandle, property}
 			http.HandleFunc(basePath+"/"+thingIdx+"/properties/"+name, propertyHandle.Handle)
@@ -69,6 +73,13 @@ func NewWebThingServer(thingType ThingsType, httpServer *http.Server) *ThingServ
 				http.HandleFunc(basePath+"/"+thingName+"/actions/"+actionName+"/"+actionID, actionIDHandle.Handle)
 			}
 
+		}
+
+		// todo
+		for _, event := range thing.events {
+			eventHandle := &EventHandle{eventsHandle,event}
+			http.HandleFunc(basePath+"/"+thingIdx+"/events/"+event.Name(), eventHandle.Handle)
+			http.HandleFunc(basePath+"/"+thingName+"/events/"+event.Name(), eventHandle.Handle)
 		}
 
 	}
@@ -444,3 +455,48 @@ func (h *ActionIDHandle) Get(w http.ResponseWriter, r *http.Request) {
 func (h *ActionIDHandle) Post(w http.ResponseWriter, r *http.Request)   {}
 func (h *ActionIDHandle) Put(w http.ResponseWriter, r *http.Request)    {}
 func (h *ActionIDHandle) Delete(w http.ResponseWriter, r *http.Request) {}
+
+// Handle a request to /actions.
+type EventsHandle struct {
+	*ThingHandle
+}
+
+func (h *EventsHandle) Handle(w http.ResponseWriter, r *http.Request) {
+	BaseHandle(h, w, r)
+}
+
+// Get Handle a GET request.
+//
+// @param {Object} r The request object
+// @param {Object} w The response object
+func (h *EventsHandle) Get(w http.ResponseWriter, r *http.Request) {
+	if _, err := w.Write([]byte(h.Thing.EventDescriptions(""))); err != nil {
+		fmt.Println(err)
+	}
+}
+func (h *EventsHandle) Post(w http.ResponseWriter, r *http.Request)   {}
+func (h *EventsHandle) Put(w http.ResponseWriter, r *http.Request)    {}
+func (h *EventsHandle) Delete(w http.ResponseWriter, r *http.Request) {}
+
+// Handle a request to /actions.
+type EventHandle struct {
+	*EventsHandle
+	*Event
+}
+
+func (h *EventHandle) Handle(w http.ResponseWriter, r *http.Request) {
+	BaseHandle(h, w, r)
+}
+
+// Get Handle a GET request.
+//
+// @param {Object} r The request object
+// @param {Object} w The response object
+func (h *EventHandle) Get(w http.ResponseWriter, r *http.Request) {
+	if _, err := w.Write(h.Event.AsEventDescription()); err != nil {
+		fmt.Println(err)
+	}
+}
+func (h *EventHandle) Post(w http.ResponseWriter, r *http.Request)   {}
+func (h *EventHandle) Put(w http.ResponseWriter, r *http.Request)    {}
+func (h *EventHandle) Delete(w http.ResponseWriter, r *http.Request) {}
