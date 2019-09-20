@@ -40,7 +40,7 @@ func runServer() {
 
 	thing := makeThing()
 	serve := &http.Server{Addr: ":8888"}
-	server := webthing.NewWebThingServer(webthing.NewSingleThing(thing), serve)
+	server := webthing.NewWebThingServer(webthing.NewSingleThing(thing), serve, "/things")
 
 	log.Fatal(server.Start())
 }

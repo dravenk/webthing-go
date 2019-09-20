@@ -73,7 +73,7 @@ Generator(thing *Thing) *Action
 PerformAction() *Action
 
 // Override this with the code necessary to cancel the action.
-Cancel() *Action
+Cancel()
 ```
 The Action Request can be used to retrieve input data in the following way like the fade.Thing().Input(). Here is an example:
 ```
@@ -103,9 +103,7 @@ func (fade *FadeAction) PerformAction() *webthing.Action {
 	return fade.Action
 }
 
-func (fade *FadeAction) Cancel() *webthing.Action {
-	return fade.Action
-}
+func (fade *FadeAction) Cancel() {}
 ```
 
 You can find an example of creating Thing above in [single-thing](https://github.com/dravenk/webthing-go/blob/master/examples/single-thing/single-thing.go). 
@@ -128,24 +126,24 @@ You can find more Examples in the [Examples](https://github.com/dravenk/webthing
  
  # Example: Get a description of a Thing
  # use the Thing index.
- curl --request GET --url http://localhost:8888/things/0
+ curl --request GET --url http://localhost:8888
  # Or use the Thing title.
- curl --request GET --url http://localhost:8888/things/Lamp
+ curl --request GET --url http://localhost:8888/Lamp
 ```
 
  Example: Properties
  ```
  # Example: Get all properties
- curl --request GET --url http://localhost:8888/things/0/properties
+ curl --request GET --url http://localhost:8888/properties
  # Or
- curl --request GET --url http://localhost:8888/things/Lamp/properties
+ curl --request GET --url http://localhost:8888/Lamp/properties
 
  # Example: Get a property
- curl --request GET --url http://localhost:8888/things/0/properties/brightness
+ curl --request GET --url http://localhost:8888/properties/brightness
  
  # Example: Set a property
  curl --request PUT \
-   --url http://localhost:8888/things/0/properties/brightness \
+   --url http://localhost:8888/properties/brightness \
    --data '{"brightness": 33}'
 ```
 
@@ -153,32 +151,32 @@ You can find more Examples in the [Examples](https://github.com/dravenk/webthing
 ```
  # Example: Action Request
  curl --request POST \
-   --url http://localhost:8888/things/0/actions \
+   --url http://localhost:8888/actions \
    --data '{"fade":{"input":{"brightness":55,"duration":2000}}}'
 
  # Example: Cancel an Action Request
     curl --request DELETE \
-      --url http://localhost:8888/things/0/actions/fade/{action_id}
+      --url http://localhost:8888/actions/fade/{action_id}
 
  # Example: Action Request
  curl --request POST \
-   --url http://localhost:8888/things/0/actions \
+   --url http://localhost:8888/actions \
    --data '{"toggle":{}}'
 
  # Example: Actions Queue
  curl --request GET \
-   --url http://localhost:8888/things/0/actions
+   --url http://localhost:8888/actions
  ```
 
  Example: Events
  ```  
  # Example: Events Request
  curl --request GET \
-   --url http://localhost:8888/things/0/events
+   --url http://localhost:8888/events
    
   # Example: Event Request
   curl --request GET \
-    --url http://localhost:8888/things/0/events/overheated
+    --url http://localhost:8888/events/overheated
 ```
 
 

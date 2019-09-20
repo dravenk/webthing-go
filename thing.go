@@ -27,7 +27,7 @@ type Thing struct {
 
 type ThingMember struct {
 	ID          string                     `json:"id"`
-	Context     string                     `json:"context"`
+	Context     string                     `json:"@context"`
 	AtType      []string                   `json:"@type"`
 	Title       string                     `json:"title"`
 	Description string                     `json:"description,omitempty"`
@@ -80,18 +80,33 @@ func (thing *Thing) AsThingDescription() []byte {
 	th.Properties = []byte(thing.PropertyDescriptions())
 
 	for name := range thing.availableActions {
-		th.Actions[name] = thing.availableActions[name].Metadata()
+		meta := thing.availableActions[name].Metadata()
+		var m map[string]interface{}
+		json.Unmarshal(meta, &m)
+		m["links"] = []Link{{
+			Rel:  "action",
+			Href: fmt.Sprintf("/actions/%s", name),
+		}}
+		obj, _ := json.Marshal(m)
+		th.Actions[name] = obj
 	}
 
 	for name := range thing.availableEvents {
 		meta, _ := thing.availableEvents[name].Metadata().MarshalJSON()
-		th.Events[name] = meta
+		var m map[string]interface{}
+		json.Unmarshal(meta, &m)
+		m["links"] = []Link{{
+			Rel:  "events",
+			Href: fmt.Sprintf("/events/%s", name),
+		}}
+		obj, _ := json.Marshal(m)
+		th.Events[name] = obj
 	}
 
 	for _, name := range []string{"properties", "actions", "events"} {
 		th.Links = append(th.Links, Link{
-			Href: fmt.Sprintf("%s/%s", thing.hrefPrefix, name),
 			Rel:  name,
+			Href: fmt.Sprintf("%s/%s", thing.hrefPrefix, name),
 		})
 	}
 
@@ -214,7 +229,9 @@ func (thing *Thing) ActionDescriptions(actionName string) []json.RawMessage {
 	} else {
 		if actions, ok := thing.actions[actionName]; ok {
 			for _, action := range actions {
-				descriptions = append(descriptions, []byte(action.AsActionDescription()))
+				if action != nil {
+					descriptions = append(descriptions, []byte(action.AsActionDescription()))
+				}
 			}
 		}
 	}
@@ -227,16 +244,19 @@ func (thing *Thing) ActionDescriptions(actionName string) []json.RawMessage {
 //@param {String?} eventName Optional event name to get descriptions for
 //
 //@returns {Object} Event descriptions.
-func (thing *Thing) EventDescriptions(eventName string) string {
-	var descriptions  []json.RawMessage
+func (thing *Thing) EventDescriptions(eventName string) []byte {
+	var descriptions []json.RawMessage
+	if len(thing.events) == 0 {
+		return []byte(`{}`)
+	}
 	for _, event := range thing.events {
-		if  eventName == "" || strings.EqualFold(event.Name(), eventName) {
+		if eventName == "" || strings.EqualFold(event.Name(), eventName) {
 			descriptions = append(descriptions, event.AsEventDescription())
 		}
 	}
 
-	content , _ := json.Marshal(descriptions)
-	return string(content)
+	content, _ := json.Marshal(descriptions)
+	return content
 }
 
 // Add a property to this thing.
@@ -327,12 +347,11 @@ func (thing *Thing) Action(actionName, actionID string) (action *Action) {
 	for _, ac := range thing.actions[actionName] {
 		// Each newly created action must contain a new uuid,
 		// otherwise a random action with the same uuid will be found and returned.
-		if ac.ID() == actionID {
+		if ac != nil && ac.ID() == actionID {
 			action = ac
 		}
 	}
 	return action
-	//return nil
 }
 
 // Add a new event and notify subscribers.
@@ -392,10 +411,12 @@ func (thing *Thing) RemoveAction(actionName, actionId string) bool {
 		return false
 	}
 
-	action.Cancel()
-	for k, ac := range thing.actions[actionName] {
-		if ac.ID() == actionId {
-			thing.actions[actionName][k] = &Action{}
+	defer action.Cancel() // Cancel action after delete from origin.
+
+	actions := thing.actions[actionName]
+	for k, ac := range actions {
+		if ac != nil && ac.ID() == actionId {
+			actions[k] = nil
 		}
 	}
 

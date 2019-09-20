@@ -2,19 +2,21 @@ package webthing
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"regexp"
 	"strconv"
+	"strings"
 )
 
 // ThingServer Web Thing Server.
 type ThingServer struct {
 	*http.Server
-	Things []*Thing
-	Name   string
-	//BasePath string
+	Things   []*Thing
+	Name     string
+	BasePath string
 }
 
 // NewWebThingServer Initialize the WebThingServer.
@@ -22,60 +24,68 @@ type ThingServer struct {
 // @param thingType        List of Things managed by this server
 // @param basePath         Base URL path to use, rather than '/'
 //
-func NewWebThingServer(thingType ThingsType, httpServer *http.Server) *ThingServer {
-	server := &ThingServer{httpServer, thingType.Things(), thingType.Name()}
+func NewWebThingServer(thingType ThingsType, httpServer *http.Server, basePath string) *ThingServer {
+	server := &ThingServer{httpServer, thingType.Things(), thingType.Name(), basePath}
+	thingsNum := len(server.Things)
 
-	thingsHandle := &ThingsHandle{server.Things}
+	if thingsNum == 1 {
+		thing := server.Things[0]
+		prePath := strings.TrimRight(server.BasePath+"/"+thing.Title(), "/")
+		preIdx := strings.TrimRight(server.BasePath, "/")
+		thing.SetHrefPrefix(preIdx)
+		thingHandle := &ThingHandle{thing}
+		propertiesHandle := &PropertiesHandle{thingHandle}
+		actionsHandle := &ActionsHandle{thingHandle}
+		eventsHandle := &EventsHandle{thingHandle}
 
-	http.HandleFunc("/", thingsHandle.Handle)
+		http.HandleFunc(prePath, thingHandle.Handle)
+		http.HandleFunc(prePath+"/properties", propertiesHandle.Handle)
+		http.HandleFunc(prePath+"/properties/", propertiesHandle.Handle)
+		http.HandleFunc(prePath+"/actions", actionsHandle.Handle)
+		http.HandleFunc(prePath+"/actions/", actionsHandle.Handle)
+		http.HandleFunc(prePath+"/events", eventsHandle.Handle)
+		http.HandleFunc(prePath+"/events/", eventsHandle.Handle)
 
-	basePath := "/things"
+		http.HandleFunc(preIdx+"/properties", propertiesHandle.Handle)
+		http.HandleFunc(preIdx+"/properties/", propertiesHandle.Handle)
+		http.HandleFunc(preIdx+"/actions", actionsHandle.Handle)
+		http.HandleFunc(preIdx+"/actions/", actionsHandle.Handle)
+		http.HandleFunc(preIdx+"/events", eventsHandle.Handle)
+		http.HandleFunc(preIdx+"/events/", eventsHandle.Handle)
 
-	http.HandleFunc(basePath, thingsHandle.Handle)
+		if preIdx == "" {
+			http.HandleFunc("/", thingHandle.Handle)
+		} else {
+			http.HandleFunc(preIdx, thingHandle.Handle)
+		}
+		return server
+	}
 
 	for id, thing := range server.Things {
-		thingName := thing.Title()
-		thingIdx := strconv.Itoa(id)
-
-		thing.SetHrefPrefix(fmt.Sprintf("%s/%s", basePath, thingIdx))
-
+		prePath := strings.TrimRight(server.BasePath+"/"+thing.Title(), "/")
+		preIdx := "/" + strconv.Itoa(id)
+		thing.SetHrefPrefix(preIdx)
 		thingHandle := &ThingHandle{thing}
-		http.HandleFunc(basePath+"/"+thingIdx, thingHandle.Handle)
-		http.HandleFunc(basePath+"/"+thingName, thingHandle.Handle)
-
 		propertiesHandle := &PropertiesHandle{thingHandle}
-		http.HandleFunc(basePath+"/"+thingIdx+"/properties", propertiesHandle.Handle)
-		http.HandleFunc(basePath+"/"+thingName+"/properties", propertiesHandle.Handle)
-
 		actionsHandle := &ActionsHandle{thingHandle}
-		http.HandleFunc(basePath+"/"+thingIdx+"/actions", actionsHandle.Handle)
-		http.HandleFunc(basePath+"/"+thingName+"/actions", actionsHandle.Handle)
-
 		eventsHandle := &EventsHandle{thingHandle}
-		http.HandleFunc(basePath+"/"+thingIdx+"/events", eventsHandle.Handle)
-		http.HandleFunc(basePath+"/"+thingName+"/events", eventsHandle.Handle)
 
-		for name, property := range thing.properties {
-			propertyHandle := PropertyHandle{propertiesHandle, property}
-			http.HandleFunc(basePath+"/"+thingIdx+"/properties/"+name, propertyHandle.Handle)
-			http.HandleFunc(basePath+"/"+thingName+"/properties/"+name, propertyHandle.Handle)
-		}
+		http.HandleFunc(prePath, thingHandle.Handle)
+		http.HandleFunc(prePath+"/properties", propertiesHandle.Handle)
+		http.HandleFunc(prePath+"/properties/", propertiesHandle.Handle)
+		http.HandleFunc(prePath+"/actions", actionsHandle.Handle)
+		http.HandleFunc(prePath+"/actions/", actionsHandle.Handle)
+		http.HandleFunc(prePath+"/events", eventsHandle.Handle)
+		http.HandleFunc(prePath+"/events/", eventsHandle.Handle)
 
-		for actionName := range thing.actions {
-			actionHandle := &ActionHandle{actionsHandle, actionName}
-			http.HandleFunc(basePath+"/"+thingIdx+"/actions/"+actionName, actionHandle.Handle)
-			http.HandleFunc(basePath+"/"+thingName+"/actions/"+actionName, actionHandle.Handle)
+		http.HandleFunc(preIdx+"/properties", propertiesHandle.Handle)
+		http.HandleFunc(preIdx+"/properties/", propertiesHandle.Handle)
+		http.HandleFunc(preIdx+"/actions", actionsHandle.Handle)
+		http.HandleFunc(preIdx+"/actions/", actionsHandle.Handle)
+		http.HandleFunc(preIdx+"/events", eventsHandle.Handle)
+		http.HandleFunc(preIdx+"/events/", eventsHandle.Handle)
 
-			actionIDHandle := &ActionIDHandle{actionHandle}
-			http.HandleFunc(basePath+"/"+thingIdx+"/actions/"+actionName+"/", actionIDHandle.Handle)
-			http.HandleFunc(basePath+"/"+thingName+"/actions/"+actionName+"/", actionIDHandle.Handle)
-
-		}
-
-		eventHandle := &EventHandle{eventsHandle}
-		http.HandleFunc(basePath+"/"+thingIdx+"/events/", eventHandle.Handle)
-		http.HandleFunc(basePath+"/"+thingName+"/events/", eventHandle.Handle)
-
+		http.HandleFunc(preIdx, thingHandle.Handle)
 	}
 
 	return server
@@ -217,7 +227,8 @@ func BaseHandle(h BaseHandler, w http.ResponseWriter, r *http.Request) {
 }
 
 type ThingsHandle struct {
-	Things []*Thing
+	Things   []*Thing
+	basePath string
 }
 
 func (h *ThingsHandle) Handle(w http.ResponseWriter, r *http.Request) {
@@ -258,9 +269,30 @@ func (h *ThingHandle) Handle(w http.ResponseWriter, r *http.Request) {
 
 func (h *ThingHandle) Get(w http.ResponseWriter, r *http.Request) {
 	content := h.Thing.AsThingDescription()
-	if _, err := w.Write(content); err != nil {
+
+	var ls map[string][]Link
+	if err := json.Unmarshal(content, &ls);err != nil {
+		fmt.Print(err)
+	}
+	scheme := "http"
+	if r.URL.Scheme != "" {
+		scheme = r.URL.Scheme
+	}
+	ls["links"] = append(ls["links"], Link{
+		Rel:       "alternate",
+		MediaType: "text/html",
+		Href:      fmt.Sprintf("%s://%s%s", scheme, r.Host, h.Href()),
+	})
+	var m map[string]interface{}
+	if err := json.Unmarshal(content, &m); err != nil {
+		fmt.Print(err)
+	}
+	m["links"] = ls["links"]
+	re, _ := json.Marshal(m)
+	if _, err := w.Write(re); err != nil {
 		fmt.Println(err)
 	}
+
 	return
 }
 
@@ -276,8 +308,34 @@ type PropertiesHandle struct {
 }
 
 func (h *PropertiesHandle) Handle(w http.ResponseWriter, r *http.Request) {
+	if name, err := resource(trimSlash(r.RequestURI)); err == nil {
+		propertyHandle := &PropertyHandle{h, h.properties[name]}
+		propertyHandle.Handle(w, r)
+		return
+	}
+
 	BaseHandle(h, w, r)
 }
+
+func trimSlash(path string) string {
+	l := len(path)
+	if l != 1 && path[l-1:] == "/" {
+		return path[:l-1]
+	}
+	return path
+}
+func resource(path string) (string, error) {
+	m := validPath().FindStringSubmatch(path)
+	if m == nil {
+		return "", errors.New("Invalid! ")
+	}
+	return m[2], nil // The resource is the second subexpression.
+}
+
+func validPath() *regexp.Regexp {
+	return regexp.MustCompile("^/(properties|actions|events)/([a-zA-Z0-9]+)$")
+}
+
 func (h *PropertiesHandle) Get(w http.ResponseWriter, r *http.Request) {
 	content, err := json.Marshal(h.Thing.Properties())
 	if err != nil {
@@ -301,6 +359,12 @@ type PropertyHandle struct {
 }
 
 func (h *PropertyHandle) Handle(w http.ResponseWriter, r *http.Request) {
+	name, err := resource(trimSlash(r.RequestURI))
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	h.Property = h.properties[name]
 	BaseHandle(h, w, r)
 }
 
@@ -309,6 +373,7 @@ func (h *PropertyHandle) Handle(w http.ResponseWriter, r *http.Request) {
 // @param {Object} r The request object
 // @param {Object} w The response object
 func (h *PropertyHandle) Get(w http.ResponseWriter, r *http.Request) {
+
 	name := h.Property.Name()
 	value := h.Property.Value().Get()
 	description := make(map[string]interface{})
@@ -334,8 +399,8 @@ func (h *PropertyHandle) Put(w http.ResponseWriter, r *http.Request) {
 	var obj map[string]interface{}
 	err := json.Unmarshal(body, &obj)
 	if err != nil {
-		w.WriteHeader(400)
 		fmt.Println(err)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
@@ -346,10 +411,9 @@ func (h *PropertyHandle) Put(w http.ResponseWriter, r *http.Request) {
 	description[name] = h.Property.Value().Get()
 	content, err := json.Marshal(description)
 
-	_, err = w.Write(content)
-	if err != nil {
+	if _, err = w.Write(content); err != nil {
 		fmt.Println(err)
-		w.WriteHeader(400)
+		w.WriteHeader(http.StatusBadRequest)
 	}
 }
 func (h *PropertyHandle) Delete(w http.ResponseWriter, r *http.Request) {}
@@ -360,7 +424,31 @@ type ActionsHandle struct {
 }
 
 func (h *ActionsHandle) Handle(w http.ResponseWriter, r *http.Request) {
+	if name, actionID, err := h.MatchActionOrID(trimSlash(r.RequestURI)); err == nil {
+		action := h.Thing.Action(name, actionID)
+		actionHandle := &ActionHandle{h, name}
+		if actionID != "" {
+			actionIDHandle := &ActionIDHandle{actionHandle, action}
+			actionIDHandle.Handle(w, r)
+			return
+		}
+		actionHandle.Handle(w, r)
+		return
+	}
 	BaseHandle(h, w, r)
+}
+
+func (h *ActionsHandle) MatchActionOrID(path string) (actionName, actionID string, err error) {
+	re := regexp.MustCompile(`^/actions/(.*)/(.*)`)
+	name := re.FindStringSubmatch(path)
+	if name != nil {
+		return name[1], name[2], nil
+	}
+	m := validPath().FindStringSubmatch(path)
+	if m == nil {
+		return "", "", errors.New("Invalid! ")
+	}
+	return m[2], "", nil // The resource is the second subexpression.
 }
 
 // Get Handle a GET request.
@@ -371,13 +459,22 @@ func (h *ActionsHandle) Get(w http.ResponseWriter, r *http.Request) {
 	var description []json.RawMessage
 
 	for name := range h.Thing.actions {
-		description = append(description, h.Thing.ActionDescriptions(name)...)
+		if content := h.Thing.ActionDescriptions(name); content != nil {
+			description = append(description, content...)
+		}
 	}
-	content, _ := json.Marshal(description)
+	if len(description) == 0 {
+		if _, err := w.Write([]byte(`{}`)); err != nil {
+			fmt.Println(err)
+		}
+		return
+	}
 
+	content, _ := json.Marshal(description)
 	if _, err := w.Write(content); err != nil {
 		fmt.Println(err)
 	}
+	return
 }
 
 // Post Handle a POST request.
@@ -390,11 +487,12 @@ func (h *ActionsHandle) Post(w http.ResponseWriter, r *http.Request) {
 	var obj map[string]map[string]*json.RawMessage
 	err := json.Unmarshal(body, &obj)
 	if err != nil {
-		w.WriteHeader(400)
 		fmt.Println(err)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
+	var description []json.RawMessage
 	for name, params := range obj {
 		if _, ok := h.Thing.actions[name]; ok {
 			input := params["input"]
@@ -402,12 +500,17 @@ func (h *ActionsHandle) Post(w http.ResponseWriter, r *http.Request) {
 			// Perform an Action in a goroutine.
 			go action.Start()
 
-			_, err = w.Write(action.AsActionDescription())
-			if err != nil {
-				fmt.Println(err)
+			if len(obj) == 1 {
+				w.WriteHeader(http.StatusCreated)
+				_, err = w.Write(action.AsActionDescription())
+				return
 			}
+			description = append(description, action.AsActionDescription())
 		}
 	}
+	content, _ := json.Marshal(description)
+	_, err = w.Write(content)
+	return
 }
 
 func (h *ActionsHandle) Put(w http.ResponseWriter, r *http.Request)    {}
@@ -424,57 +527,87 @@ func (h *ActionHandle) Handle(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *ActionHandle) Get(w http.ResponseWriter, r *http.Request) {
-	content, _ := json.Marshal(h.Thing.ActionDescriptions(h.ActionName))
-	if _, err := w.Write(content); err != nil {
-		fmt.Println(err)
+	if descriptions := h.Thing.ActionDescriptions(h.ActionName); len(descriptions) > 0 {
+		content, _ := json.Marshal(descriptions)
+		if _, err := w.Write(content); err != nil {
+			fmt.Println(err)
+		}
 	}
+	return
 }
-func (h *ActionHandle) Post(w http.ResponseWriter, r *http.Request)   {}
+
+func (h *ActionHandle) Post(w http.ResponseWriter, r *http.Request) {
+	body, _ := ioutil.ReadAll(r.Body)
+
+	var obj map[string]map[string]*json.RawMessage
+	err := json.Unmarshal(body, &obj)
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	var description []json.RawMessage
+	for name, params := range obj {
+		if name == h.ActionName {
+			if _, ok := h.Thing.actions[name]; ok {
+				input := params["input"]
+				action := h.Thing.PerformAction(name, input)
+
+				// Perform an Action in a goroutine.
+				go action.Start()
+
+				if len(obj) == 1 {
+					w.WriteHeader(http.StatusCreated)
+					_, err = w.Write(action.AsActionDescription())
+					return
+				}
+
+				description = append(description, action.AsActionDescription())
+			}
+		}
+	}
+	content, _ := json.Marshal(description)
+	w.WriteHeader(http.StatusCreated)
+	_, err = w.Write(content)
+	return
+
+}
+
 func (h *ActionHandle) Put(w http.ResponseWriter, r *http.Request)    {}
 func (h *ActionHandle) Delete(w http.ResponseWriter, r *http.Request) {}
 
 // ActionIDHandle Handle a request to /actions/<action_name>/<action_id>.
 type ActionIDHandle struct {
 	*ActionHandle
+	*Action
 }
 
 func (h *ActionIDHandle) Handle(w http.ResponseWriter, r *http.Request) {
+	if h.Action == nil {
+		w.WriteHeader(http.StatusBadRequest)
+		if _, err := w.Write([]byte(`Bad request. Action not found.`)); err != nil {
+			fmt.Print(err)
+		}
+		return
+	}
 	BaseHandle(h, w, r)
 }
 
-func (h *ActionIDHandle) MatchActionID(path string) (actionID string, bool bool) {
-	re := regexp.MustCompile(`/things/(.*)/actions/(.*)` + `/(.*)`)
-	if re.MatchString(path) {
-		name := re.FindStringSubmatch(path)
-		if len(path) >= 4 {
-			return name[3], true
-		}
+func (h *ActionIDHandle) Get(w http.ResponseWriter, r *http.Request) {
+	if _, err := w.Write(h.Action.AsActionDescription()); err != nil {
+		fmt.Println(err)
 	}
 	return
-}
 
-func (h *ActionIDHandle) Get(w http.ResponseWriter, r *http.Request) {
-	if actionID, ok := h.MatchActionID(r.RequestURI); ok {
-		action := h.Thing.Action(h.ActionName, actionID)
-		if action != nil {
-			if _, err := w.Write(action.AsActionDescription()); err != nil {
-				fmt.Println(err)
-			}
-			return
-		}
-	}
-	w.WriteHeader(400)
 }
 
 func (h *ActionIDHandle) Post(w http.ResponseWriter, r *http.Request) {}
 func (h *ActionIDHandle) Put(w http.ResponseWriter, r *http.Request)  {}
 func (h *ActionIDHandle) Delete(w http.ResponseWriter, r *http.Request) {
-	if actionID, ok := h.MatchActionID(r.RequestURI); ok {
-		if h.Thing.RemoveAction(h.ActionName, actionID) {
-			w.Write([]byte(`204 No Content`))
-			w.WriteHeader(204)
-			return
-		}
+	if h.RemoveAction(h.ActionName, h.Action.ID()) {
+		w.WriteHeader(http.StatusNoContent)
+		return
 	}
 }
 
@@ -484,6 +617,11 @@ type EventsHandle struct {
 }
 
 func (h *EventsHandle) Handle(w http.ResponseWriter, r *http.Request) {
+	if name, err := resource(r.RequestURI); err == nil {
+		eventHandle := &EventHandle{h, name}
+		eventHandle.Handle(w, r)
+		return
+	}
 	BaseHandle(h, w, r)
 }
 
@@ -492,9 +630,12 @@ func (h *EventsHandle) Handle(w http.ResponseWriter, r *http.Request) {
 // @param {Object} r The request object
 // @param {Object} w The response object
 func (h *EventsHandle) Get(w http.ResponseWriter, r *http.Request) {
-	if _, err := w.Write([]byte(h.Thing.EventDescriptions(""))); err != nil {
-		fmt.Println(err)
+	if content := h.Thing.EventDescriptions("");content != nil {
+		if _, err := w.Write(content); err != nil {
+			fmt.Println(err)
+		}
 	}
+	return
 }
 func (h *EventsHandle) Post(w http.ResponseWriter, r *http.Request)   {}
 func (h *EventsHandle) Put(w http.ResponseWriter, r *http.Request)    {}
@@ -503,6 +644,7 @@ func (h *EventsHandle) Delete(w http.ResponseWriter, r *http.Request) {}
 // Handle a request to /actions.
 type EventHandle struct {
 	*EventsHandle
+	eventName string
 }
 
 func (h *EventHandle) Handle(w http.ResponseWriter, r *http.Request) {
@@ -514,17 +656,9 @@ func (h *EventHandle) Handle(w http.ResponseWriter, r *http.Request) {
 // @param {Object} r The request object
 // @param {Object} w The response object
 func (h *EventHandle) Get(w http.ResponseWriter, r *http.Request) {
-	if eventName, ok := h.MatchEventName(r.RequestURI); ok {
-		w.Write([]byte(h.Thing.EventDescriptions(eventName)))
-	}
-}
-
-func (h *EventHandle) MatchEventName(path string) (eventName string, bool bool) {
-	re := regexp.MustCompile(`/things/(.*)/events/(.*)`)
-	if re.MatchString(path) {
-		name := re.FindStringSubmatch(path)
-		if len(path) >= 3 {
-			return name[2], true
+	if content := h.Thing.EventDescriptions(h.eventName); content != nil {
+		if _,err := w.Write(content); err != nil {
+			fmt.Print(err)
 		}
 	}
 	return

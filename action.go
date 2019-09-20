@@ -21,7 +21,7 @@ type Action struct {
 	PerformAction func() *Action
 
 	// Override this with the code necessary to cancel the action.
-	Cancel func() *Action
+	Cancel func()
 }
 
 // Actioner Customize the methods that the action must implement.
@@ -36,7 +36,7 @@ type Actioner interface {
 	PerformAction() *Action
 
 	// Override this with the code necessary to cancel the action.
-	Cancel() *Action
+	Cancel()
 
 	Start() *Action
 	Finish() *Action
@@ -59,7 +59,7 @@ type Actioner interface {
 // @param thing Thing this action belongs to
 // @param name  Name of the action
 // @param input Any action inputs
-func NewAction(id string, thing *Thing, name string, input *json.RawMessage, PerformAction func() *Action, Cancel func() *Action) *Action {
+func NewAction(id string, thing *Thing, name string, input *json.RawMessage, PerformAction func() *Action, Cancel func()) *Action {
 	action := &Action{
 		id:            id,
 		thing:         thing,
@@ -81,22 +81,21 @@ func NewAction(id string, thing *Thing, name string, input *json.RawMessage, Per
 // AsActionDescription Get the action description.
 // @return Description of the action as a JSONObject.
 func (action *Action) AsActionDescription() []byte {
+	actionName := action.Name()
 	obj := make(map[string]interface{})
-
-
-	obj[action.Name()]= make(map[string]*json.RawMessage)
+	actionObj := make(map[string]interface{})
 
 	if input := action.Input(); input != nil {
-		meta := make(map[string]*json.RawMessage)
-		meta["input"] = input
-		obj[action.Name()] = meta
+		actionObj["input"] = input
 	}
-	if action.TimeCompleted() != "" {
-		obj["timeCompleted"] = action.TimeCompleted()
+	if timeCompleted := action.TimeCompleted(); timeCompleted != "" {
+		actionObj["timeCompleted"] = timeCompleted
 	}
-	obj["href"] = action.href
-	obj["status"] = action.Status()
-	obj["timeRequested"] = action.TimeRequested()
+	actionObj["href"] = action.Href()
+	actionObj["status"] = action.Status()
+	actionObj["timeRequested"] = action.TimeRequested()
+	obj[actionName] = actionObj
+
 	description, err := json.Marshal(obj)
 	if err != nil {
 		fmt.Println("Error: ", err.Error())

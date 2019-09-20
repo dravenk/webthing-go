@@ -18,16 +18,16 @@ func main() {
 	singleThing := webthing.NewSingleThing(thing)
 	httpServer := &http.Server{Addr: "0.0.0.0:8888"}
 
-	server := webthing.NewWebThingServer(singleThing, httpServer)
+	server := webthing.NewWebThingServer(singleThing, httpServer, "")
 	log.Fatal(server.Start())
 }
 
 func MakeThing() *webthing.Thing {
 	// Create a Lamp.
 	thing := webthing.NewThing("urn:dev:ops:my-thing-1234",
-		"Lamp",
+		"My Lamp",
 		[]string{"OnOffSwitch", "Light"},
-		"A web connected thing")
+		"A web connected lamp")
 
 	// Adding an OnOffProperty to thing.
 	onDescription := []byte(`{
@@ -50,7 +50,8 @@ func MakeThing() *webthing.Thing {
     "title": "Brightness",
     "description": "The level of light from 0-100",
     "minimum": 0,
-    "maximum": 100
+    "maximum": 100,
+	"unit": "percent"
 	}`)
 
 	thing.AddProperty(webthing.NewProperty(thing,
@@ -61,7 +62,7 @@ func MakeThing() *webthing.Thing {
 	//Adding a Fade action to this Lamp.
 	fadeMeta := []byte(`{
     "title": "Fade",
-    "description": "Fade the lamp to a given brightness",
+    "description": "Fade the lamp to a given level",
     "input": {
         "@type": "FadeAction",
         "type": "object",
@@ -69,11 +70,12 @@ func MakeThing() *webthing.Thing {
             "brightness": {
                 "type": "integer",
                 "minimum": 0,
-                "maximum": 100
+                "maximum": 100,
+				"unit": "percent"
             },
             "duration": {
                 "type": "integer",
-                "minimum": 0,
+                "minimum": 1,
                 "unit": "milliseconds"
             }
         }
@@ -85,7 +87,7 @@ func MakeThing() *webthing.Thing {
 	thing.AddAvailableEvent("overheated",
 		[]byte(`{
             "description":
-            "The thing has exceeded its safe operating temperature",
+            "The lamp has exceeded its safe operating temperature",
             "type": "number",
             "unit": "degree celsius"
         }`))
@@ -128,17 +130,15 @@ func (fade *FadeAction) PerformAction() *webthing.Action {
 		time.Sleep(time.Duration(int64(duration.(float64))) * time.Millisecond)
 	}
 
-	value := rand.Intn(100)
-	event := webthing.NewEvent(thing, "overheated", []byte(fmt.Sprintln(value)))
+	event := webthing.NewEvent(thing, "overheated", []byte(fmt.Sprintln(102)))
 	thing.AddEvent(event)
 
 	fmt.Println("Fade action Done...", fade.Name())
 	return fade.Action
 }
 
-func (fade *FadeAction) Cancel() *webthing.Action {
+func (fade *FadeAction) Cancel() {
 	fmt.Println("Cancel fade action...")
-	return fade.Action
 }
 
 // Toggles a boolean state on and off.
@@ -167,9 +167,8 @@ func (toggle *ToggleAction) PerformAction() *webthing.Action {
 	return toggle.Action
 }
 
-func (toggle *ToggleAction) Cancel() *webthing.Action {
+func (toggle *ToggleAction) Cancel() {
 	fmt.Println("Cancel toggle action...")
-	return toggle.Action
 }
 
 func onValueForwarder(i interface{}) {
