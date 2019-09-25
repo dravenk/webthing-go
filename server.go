@@ -28,6 +28,9 @@ func NewWebThingServer(thingType ThingsType, httpServer *http.Server, basePath s
 	server := &ThingServer{httpServer, thingType.Things(), thingType.Name(), basePath}
 	thingsNum := len(server.Things)
 
+	thingsHandle := &ThingsHandle{server.Things, basePath}
+	http.HandleFunc("/", thingsHandle.Handle)
+
 	if thingsNum == 1 {
 		thing := server.Things[0]
 		prePath := strings.TrimRight(server.BasePath+"/"+thing.Title(), "/")
@@ -53,9 +56,7 @@ func NewWebThingServer(thingType ThingsType, httpServer *http.Server, basePath s
 		http.HandleFunc(preIdx+"/events", eventsHandle.Handle)
 		http.HandleFunc(preIdx+"/events/", eventsHandle.Handle)
 
-		if preIdx == "" {
-			http.HandleFunc("/", thingHandle.Handle)
-		} else {
+		if preIdx != "" {
 			http.HandleFunc(preIdx, thingHandle.Handle)
 		}
 		return server
@@ -232,16 +233,16 @@ type ThingsHandle struct {
 }
 
 func (h *ThingsHandle) Handle(w http.ResponseWriter, r *http.Request) {
-	BaseHandle(h, w, r)
-}
-
-func (h *ThingsHandle) Get(w http.ResponseWriter, r *http.Request) {
-
 	if len(h.Things) == 1 {
 		thingHandle := &ThingHandle{h.Things[0]}
 		thingHandle.Handle(w, r)
 		return
 	}
+
+	BaseHandle(h, w, r)
+}
+
+func (h *ThingsHandle) Get(w http.ResponseWriter, r *http.Request) {
 
 	var things []json.RawMessage
 	for _, thing := range h.Things {
@@ -271,7 +272,7 @@ func (h *ThingHandle) Get(w http.ResponseWriter, r *http.Request) {
 	content := h.Thing.AsThingDescription()
 
 	var ls map[string][]Link
-	if err := json.Unmarshal(content, &ls);err != nil {
+	if err := json.Unmarshal(content, &ls); err != nil {
 		fmt.Print(err)
 	}
 	scheme := "http"
@@ -630,7 +631,7 @@ func (h *EventsHandle) Handle(w http.ResponseWriter, r *http.Request) {
 // @param {Object} r The request object
 // @param {Object} w The response object
 func (h *EventsHandle) Get(w http.ResponseWriter, r *http.Request) {
-	if content := h.Thing.EventDescriptions("");content != nil {
+	if content := h.Thing.EventDescriptions(""); content != nil {
 		if _, err := w.Write(content); err != nil {
 			fmt.Println(err)
 		}
@@ -657,7 +658,7 @@ func (h *EventHandle) Handle(w http.ResponseWriter, r *http.Request) {
 // @param {Object} w The response object
 func (h *EventHandle) Get(w http.ResponseWriter, r *http.Request) {
 	if content := h.Thing.EventDescriptions(h.eventName); content != nil {
-		if _,err := w.Write(content); err != nil {
+		if _, err := w.Write(content); err != nil {
 			fmt.Print(err)
 		}
 	}

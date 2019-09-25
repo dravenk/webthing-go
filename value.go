@@ -1,7 +1,5 @@
 package webthing
 
-import "fmt"
-
 // Value A property value.
 //
 // This is used for communicating between the Thing representation and the
@@ -50,7 +48,6 @@ func (v *Value) Get() interface{} {
 func (v *Value) NotifyOfExternalUpdate(value interface{}) {
 	if value != nil && value != v.lastValue {
 		v.lastValue = value
-		fmt.Println("Value update: ", value)
 		//v.emit('update', value);
 	}
 }
