@@ -16,18 +16,17 @@ You can start building your Web of Thing by looking at [single-thing](https://gi
 #### Download and import:
 ```
  go get -u -v github.com/dravenk/webthing-go
-
 ```
 This package is called webthing. You just need to import this package the way golang normally imports a package.
 
-```
+```go
 import (
 	"github.com/dravenk/webthing-go"
 )
 ```
 
 #### Create Thing:
-```
+```go
 // Create a Lamp.
 thing := webthing.NewThing("urn:dev:ops:my-thing-1234",
 	"Lamp",
@@ -37,16 +36,16 @@ thing := webthing.NewThing("urn:dev:ops:my-thing-1234",
 ```
 Before creating OnOffProperty you need to create the Forwarder method of OnOff Value. The method that updates the actual value on the thing
 Example:
-```
+```go
 func onValueForwarder(i interface{}) {
     fmt.Println("Now on statue: ", i)
 }
 ```
 Create an onValue with default value:
-```
+```go
 onValue := webthing.NewValue(true, onValueForwarder)
 ```
-```
+```go
 // Adding an OnOffProperty to thing.
 onDescription := []byte(`{
     "@type": "OnOffProperty",
@@ -62,7 +61,7 @@ on := webthing.NewProperty(thing,
 thing.AddProperty(on)
 ```
 Create an action. The methods you have to implement are:
-```
+```go
 // Custom Action need create a Generator to generate a action.
 // The application will invoke the Action created by the Generator method.
 // This is very similar to simply constructor.
@@ -76,7 +75,7 @@ PerformAction() *Action
 Cancel()
 ```
 The Action Request can be used to retrieve input data in the following way like the fade.Thing().Input(). Here is an example:
-```
+```go
 type FadeAction struct {
 	*webthing.Action
 }
