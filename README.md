@@ -5,7 +5,6 @@ Web of Things
  [![GoDoc](https://godoc.org/github.com/dravenk/webthing-go?status.png)](https://godoc.org/github.com/dravenk/webthing-go) 
  [![Codacy Badge](https://api.codacy.com/project/badge/Grade/bef38274a3cb4156b374bb76dc1670e5)](https://www.codacy.com/manual/dravenk/webthing-go?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=dravenk/webthing-go&amp;utm_campaign=Badge_Grade) 
  [![travis](https://api.travis-ci.org/dravenk/webthing-go.svg?branch=master)](https://travis-ci.com/dravenk/webthing-go) 
- [![coveralls](https://coveralls.io/repos/dravenk/webthing-go/badge.svg?branch=master&service=github)](https://coveralls.io/github/dravenk/webthing-go?branch=master)
  [![Go Report Card](https://goreportcard.com/badge/github.com/dravenk/webthing-go)](https://goreportcard.com/report/github.com/dravenk/webthing-go)
  [![codebeat badge](https://codebeat.co/badges/090b9189-b20c-4910-8ff2-d7c12a28e55f)](https://codebeat.co/projects/github-com-dravenk-webthing-go-master)
 
