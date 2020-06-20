@@ -2,4 +2,8 @@ module github.com/dravenk/webthing-go
 
 go 1.12
 
-require github.com/google/uuid v1.1.1
+require (
+	github.com/google/uuid v1.1.1
+	github.com/mattn/goveralls v0.0.5 // indirect
+	golang.org/x/net v0.0.0-20200301022130-244492dfa37a
+)
