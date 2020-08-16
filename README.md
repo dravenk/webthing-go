@@ -10,7 +10,11 @@ Web of Things
 
 ### USAGE:  
 
-You can start building your Web of Thing by looking at [single-thing](https://github.com/dravenk/webthing-go/blob/master/examples/single-thing/single-thing.go)
+You can start building your Web of Thing by looking at [single-thing](https://github.com/dravenk/webthing-go/blob/master/examples/single-thing/single-thing.go). 
+You can also run sample with [docker](https://hub.docker.com/r/dravenk/webthing):
+```
+docker run -ti --name single-thing -p 8888:8888 -d dravenk/webthing
+```
 
 #### Download and import:
 ```
