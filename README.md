@@ -16,7 +16,7 @@ You can start building your Web of Thing by looking at [single-thing](https://gi
 ```
  go get -u -v github.com/dravenk/webthing-go
 ```
-This project is called webthing-go to keep the naming consistent with the implementation of other languages。 This package name is called `webthing`. You just need to import this package the way golang normally imports a package.
+This package name is called `webthing`. This project is called webthing-go to keep the naming consistent with the implementation of other languages. You just need to import this package the way golang normally imports a package.
 
 ```go
 import (
