@@ -269,10 +269,10 @@ func (h *ThingHandle) Handle(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *ThingHandle) Get(w http.ResponseWriter, r *http.Request) {
-	content := h.Thing.AsThingDescription()
+	base := h.Thing.AsThingDescription()
 
 	var ls map[string][]Link
-	if err := json.Unmarshal(content, &ls); err != nil {
+	if err := json.Unmarshal(base, &ls); err != nil {
 		fmt.Print(err)
 	}
 	scheme := "http"
@@ -284,12 +284,23 @@ func (h *ThingHandle) Get(w http.ResponseWriter, r *http.Request) {
 		MediaType: "text/html",
 		Href:      fmt.Sprintf("%s://%s%s", scheme, r.Host, h.Href()),
 	})
-	var m map[string]interface{}
-	if err := json.Unmarshal(content, &m); err != nil {
+	var desc map[string]interface{}
+	if err := json.Unmarshal(base, &desc); err != nil {
 		fmt.Print(err)
 	}
-	m["links"] = ls["links"]
-	re, _ := json.Marshal(m)
+	desc["links"] = ls["links"]
+
+	type securityDefinitions struct{
+		NosecSc struct{
+			Scheme string `json:"scheme"`
+		} `json:"nosec_sc"`
+	}
+	sec := &securityDefinitions{}
+	sec.NosecSc.Scheme = "nosec"
+	desc["securityDefinitions"] = sec
+	desc["security"] = "nosec_sc"
+
+	re, _ := json.Marshal(desc)
 	if _, err := w.Write(re); err != nil {
 		fmt.Println(err)
 	}
