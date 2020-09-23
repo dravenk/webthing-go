@@ -24,7 +24,7 @@ func main() {
 
 func MakeThing() *webthing.Thing {
 	// Create a Lamp.
-	thing := webthing.NewThing("urn:dev:ops:my-thing-1234",
+	thing := webthing.NewThing("urn:dev:ops:my-lamp-1234",
 		"My Lamp",
 		[]string{"OnOffSwitch", "Light"},
 		"A web connected lamp")
@@ -61,25 +61,29 @@ func MakeThing() *webthing.Thing {
 
 	//Adding a Fade action to this Lamp.
 	fadeMeta := []byte(`{
-    "title": "Fade",
-    "description": "Fade the lamp to a given level",
-    "input": {
-        "@type": "FadeAction",
-        "type": "object",
-        "properties": {
-            "brightness": {
-                "type": "integer",
-                "minimum": 0,
-                "maximum": 100,
-				"unit": "percent"
-            },
-            "duration": {
-                "type": "integer",
-                "minimum": 1,
-                "unit": "milliseconds"
-            }
-        }
-    }
+    	"title": "Fade",
+    	"description": "Fade the lamp to a given level",
+    	"input": {
+    	    "@type": "FadeAction",
+			"type": "object",
+			"required": [
+				"brightness",
+				"duration"
+			],
+    	    "properties": {
+    	        "brightness": {
+    	            "type": "integer",
+    	            "minimum": 0,
+    	            "maximum": 100,
+					"unit": "percent"
+    	        },
+    	        "duration": {
+    	            "type": "integer",
+    	            "minimum": 1,
+    	            "unit": "milliseconds"
+    	        }
+    	    }
+    	}
 	}`)
 	fade := &FadeAction{}
 	thing.AddAvailableAction("fade", fadeMeta, fade)

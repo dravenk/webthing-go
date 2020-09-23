@@ -272,9 +272,8 @@ func (h *ThingHandle) Get(w http.ResponseWriter, r *http.Request) {
 	base := h.Thing.AsThingDescription()
 
 	var ls map[string][]Link
-	if err := json.Unmarshal(base, &ls); err != nil {
-		fmt.Print(err)
-	}
+	json.Unmarshal(base, &ls)
+
 	scheme := "http"
 	if r.URL.Scheme != "" {
 		scheme = r.URL.Scheme
@@ -290,8 +289,8 @@ func (h *ThingHandle) Get(w http.ResponseWriter, r *http.Request) {
 	}
 	desc["links"] = ls["links"]
 
-	type securityDefinitions struct{
-		NosecSc struct{
+	type securityDefinitions struct {
+		NosecSc struct {
 			Scheme string `json:"scheme"`
 		} `json:"nosec_sc"`
 	}
@@ -509,6 +508,11 @@ func (h *ActionsHandle) Post(w http.ResponseWriter, r *http.Request) {
 		if _, ok := h.Thing.actions[name]; ok {
 			input := params["input"]
 			action := h.Thing.PerformAction(name, input)
+			//todo
+			if action == nil {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
 			// Perform an Action in a goroutine.
 			go action.Start()
 

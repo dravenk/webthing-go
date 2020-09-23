@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/xeipuuv/gojsonschema"
 	"golang.org/x/net/websocket"
 	"strings"
 )
@@ -383,9 +384,23 @@ func (thing *Thing) PerformAction(actionName string, input *json.RawMessage) *Ac
 	}
 
 	actionType := thing.availableActions[actionName]
-	if !actionType.ValidateActionInput(input) {
+
+	schemaLoader := gojsonschema.NewGoLoader(actionType.schema)
+	documentLoader := gojsonschema.NewGoLoader(input)
+	result, err := gojsonschema.Validate(schemaLoader, documentLoader)
+	if err != nil {
 		return nil
 	}
+	if !result.Valid() {
+		fmt.Printf("The document is not valid. see errors :\n")
+		for _, desc := range result.Errors() {
+			fmt.Printf("- %s\n", desc)
+		}
+		return nil
+	}
+	// if !actionType.ValidateActionInput(input) {
+	// 	return nil
+	// }
 
 	cls := actionType.getCls()
 
@@ -586,13 +601,12 @@ func NewAvailableAction(metadata json.RawMessage, cls Actioner) *AvailableAction
 	ac.metadata = metadata
 	ac.cls = cls
 
-	// todo
-	//if (metadata.has("input")) {
-	//JSONObject rawSchema = metadata.getJSONObject("input");
-	//this.schema = SchemaLoader.load(rawSchema);
-	//} else {
-	//this.schema = null;
-	//}
+	// Creating the map for input
+	m := map[string]json.RawMessage{}
+	json.Unmarshal(metadata, &m)
+	if _, ok := m["input"]; ok {
+		ac.schema = m["input"]
+	}
 
 	return ac
 }

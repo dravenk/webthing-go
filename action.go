@@ -170,6 +170,15 @@ func (action *Action) SetInput(input *json.RawMessage) {
 
 // Start performing the action.
 func (action *Action) Start() *Action {
+	// Todo
+	// Handle an error performing the action.
+	defer func() {
+		if e := recover(); e != nil {
+			fmt.Println("Perform Action encountered an error")
+		}
+		return
+	}()
+
 	action.status = "pending"
 	action.thing.ActionNotify(action)
 	action.PerformAction()
