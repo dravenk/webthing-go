@@ -28,7 +28,7 @@ func main() {
 // MakeDimmableLight A dimmable light that logs received commands to stdout.
 func MakeDimmableLight() *webthing.Thing {
 	// Create a Lamp.
-	thing := webthing.NewThing("urn:dev:ops:my-thing-1234",
+	thing := webthing.NewThing("urn:dev:ops:my-lamp-1234",
 		"My Lamp",
 		[]string{"OnOffSwitch", "Light"},
 		"A web connected lamp")
@@ -75,6 +75,10 @@ func MakeDimmableLight() *webthing.Thing {
         "@type": "FadeAction",
         "type": "object",
         "properties": {
+			"required": [
+				"brightness",
+				"duration"
+			],
             "brightness": {
                 "type": "integer",
                 "minimum": 0,

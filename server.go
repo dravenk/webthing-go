@@ -274,14 +274,14 @@ func (h *ThingHandle) Get(w http.ResponseWriter, r *http.Request) {
 	var ls map[string][]Link
 	json.Unmarshal(base, &ls)
 
-	scheme := "http"
-	if r.URL.Scheme != "" {
-		scheme = r.URL.Scheme
-	}
+	scheme := "ws"
+	// if r.URL.Scheme != "" {
+	// 	scheme = r.URL.Scheme
+	// }
+	wsHref := fmt.Sprintf("%s://%s%s",scheme, r.Host, h.Href());
 	ls["links"] = append(ls["links"], Link{
 		Rel:       "alternate",
-		MediaType: "text/html",
-		Href:      fmt.Sprintf("%s://%s%s", scheme, r.Host, h.Href()),
+		Href: strings.TrimRight(wsHref+"/"+h.Href(), "/"),
 	})
 	var desc map[string]interface{}
 	if err := json.Unmarshal(base, &desc); err != nil {
@@ -508,11 +508,12 @@ func (h *ActionsHandle) Post(w http.ResponseWriter, r *http.Request) {
 		if _, ok := h.Thing.actions[name]; ok {
 			input := params["input"]
 			action := h.Thing.PerformAction(name, input)
-			//todo
+
 			if action == nil {
 				w.WriteHeader(http.StatusBadRequest)
 				return
 			}
+
 			// Perform an Action in a goroutine.
 			go action.Start()
 
@@ -569,6 +570,11 @@ func (h *ActionHandle) Post(w http.ResponseWriter, r *http.Request) {
 			if _, ok := h.Thing.actions[name]; ok {
 				input := params["input"]
 				action := h.Thing.PerformAction(name, input)
+
+				if action == nil {
+					w.WriteHeader(http.StatusBadRequest)
+					return
+				}
 
 				// Perform an Action in a goroutine.
 				go action.Start()
