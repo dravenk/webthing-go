@@ -7,6 +7,7 @@ import (
 	"github.com/xeipuuv/gojsonschema"
 	"github.com/gorilla/websocket"
 	"strings"
+	"path/filepath"
 )
 
 // A Web Thing.
@@ -86,7 +87,7 @@ func (thing *Thing) AsThingDescription() []byte {
 		json.Unmarshal(meta, &m)
 		m["links"] = []Link{{
 			Rel:  "action",
-			Href: fmt.Sprintf("/actions/%s", name),
+			Href:  filepath.Clean(fmt.Sprintf("/%s/actions/%s",thing.Href(), name)),
 		}}
 		obj, _ := json.Marshal(m)
 		th.Actions[name] = obj
@@ -98,7 +99,7 @@ func (thing *Thing) AsThingDescription() []byte {
 		json.Unmarshal(meta, &m)
 		m["links"] = []Link{{
 			Rel:  "events",
-			Href: fmt.Sprintf("/events/%s", name),
+			Href:  filepath.Clean(fmt.Sprintf("/%s/events/%s",thing.Href(), name)),
 		}}
 		obj, _ := json.Marshal(m)
 		th.Events[name] = obj
