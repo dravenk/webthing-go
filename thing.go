@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/xeipuuv/gojsonschema"
-	"golang.org/x/net/websocket"
+	"github.com/gorilla/websocket"
 	"strings"
 )
 
@@ -510,8 +510,7 @@ func (thing *Thing) PropertyNotify(property Property) error {
 		return err
 	}
 	for _, sub := range thing.subscribers {
-		_, err := sub.Write(msg)
-		if err != nil {
+		if err := sub.WriteJSON(msg);err != nil {
 			return err
 		}
 	}
@@ -531,8 +530,7 @@ func (thing *Thing) ActionNotify(action *Action) error {
 		return err
 	}
 	for _, sub := range thing.subscribers {
-		_, err := sub.Write(msg)
-		if err != nil {
+		if err := sub.WriteJSON(msg);err != nil {
 			return err
 		}
 	}
@@ -556,8 +554,7 @@ func (thing *Thing) EventNotify(event *Event) error {
 		return err
 	}
 	for _, sub := range thing.subscribers {
-		_, err := sub.Write(msg)
-		if err != nil {
+		if err := sub.WriteJSON(msg);err != nil {
 			return err
 		}
 	}
