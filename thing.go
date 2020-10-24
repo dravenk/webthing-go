@@ -4,13 +4,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/xeipuuv/gojsonschema"
 	"github.com/gorilla/websocket"
-	"strings"
+	"github.com/xeipuuv/gojsonschema"
 	"path/filepath"
+	"strings"
 )
 
-// A Web Thing.
+// Thing A Web Thing struct.
 type Thing struct {
 	id               string
 	context          string
@@ -27,6 +27,7 @@ type Thing struct {
 	uiHref           string
 }
 
+// ThingMember thingmember
 type ThingMember struct {
 	ID          string                     `json:"id"`
 	Context     string                     `json:"@context"`
@@ -39,6 +40,7 @@ type ThingMember struct {
 	Links       []Link                     `json:"links"`
 }
 
+// NewThing create a thing.
 func NewThing(id, title string, atType []string, description string) *Thing {
 	thing := &Thing{}
 	thing.id = id
@@ -57,14 +59,15 @@ func NewThing(id, title string, atType []string, description string) *Thing {
 	return thing
 }
 
+// Link base link struct
 type Link struct {
 	Href      string `json:"href,omitempty"`
 	Rel       string `json:"rel,omitempty"`
 	MediaType string `json:"mediaType,omitempty"`
 }
 
+// AsThingDescription retrun []byte data of thing struct.
 // Return the thing state as a Thing Description.
-//
 // @returns {Object} Current thing state
 func (thing *Thing) AsThingDescription() []byte {
 
@@ -87,7 +90,7 @@ func (thing *Thing) AsThingDescription() []byte {
 		json.Unmarshal(meta, &m)
 		m["links"] = []Link{{
 			Rel:  "action",
-			Href:  filepath.Clean(fmt.Sprintf("/%s/actions/%s",thing.Href(), name)),
+			Href: filepath.Clean(fmt.Sprintf("/%s/actions/%s", thing.Href(), name)),
 		}}
 		obj, _ := json.Marshal(m)
 		th.Actions[name] = obj
@@ -99,7 +102,7 @@ func (thing *Thing) AsThingDescription() []byte {
 		json.Unmarshal(meta, &m)
 		m["links"] = []Link{{
 			Rel:  "events",
-			Href:  filepath.Clean(fmt.Sprintf("/%s/events/%s",thing.Href(), name)),
+			Href: filepath.Clean(fmt.Sprintf("/%s/events/%s", thing.Href(), name)),
 		}}
 		obj, _ := json.Marshal(m)
 		th.Events[name] = obj
@@ -112,11 +115,11 @@ func (thing *Thing) AsThingDescription() []byte {
 		})
 	}
 
-	if thing.UiHref() != "" {
+	if thing.UIHref() != "" {
 		th.Links = append(th.Links, Link{
 			Rel:       "alternate",
 			MediaType: "text/html",
-			Href:      thing.UiHref(),
+			Href:      thing.UIHref(),
 		})
 	}
 
@@ -139,14 +142,14 @@ func (thing *Thing) Href() string {
 	return "/"
 }
 
-// UiHref Get this thing's UI href.
+// UIHref Get this thing's UI href.
 //
 // @returns {String|null} The href.
-func (thing *Thing) UiHref() string {
+func (thing *Thing) UIHref() string {
 	return thing.uiHref
 }
 
-// Set the prefix of any hrefs associated with this thing.
+// SetHrefPrefix Set the prefix of any hrefs associated with this thing.
 //
 // @param {String} prefix The prefix
 func (thing *Thing) SetHrefPrefix(prefix string) {
@@ -161,28 +164,28 @@ func (thing *Thing) SetHrefPrefix(prefix string) {
 	}
 }
 
-// Set the href of this thing's custom UI.
+// SetUIHref Set the href of this thing's custom UI.
 //
 // @param {String} href The href
-func (thing *Thing) SetUiHref(href string) {
+func (thing *Thing) SetUIHref(href string) {
 	thing.uiHref = href
 }
 
-// Get the ID of the thing.
+// ID Get the ID of the thing.
 //
 // @returns {String} The ID.
 func (thing *Thing) ID() string {
 	return thing.id
 }
 
-// Get the title of the thing.
+// Title Get the title of the thing.
 //
 // @returns {String} The title.
 func (thing *Thing) Title() string {
 	return thing.title
 }
 
-// Get the type context of the thing.
+// Context Get the type context of the thing.
 //
 // @returns {String} The contexthing.
 func (thing *Thing) Context() string {
@@ -203,7 +206,7 @@ func (thing *Thing) Description() string {
 	return thing.description
 }
 
-// Get the thing's properties as an object.
+// PropertyDescriptions Get the thing's properties as an object.
 //
 // @returns {Object} Properties, i.e. name -> description
 func (thing *Thing) PropertyDescriptions() string {
@@ -216,7 +219,7 @@ func (thing *Thing) PropertyDescriptions() string {
 	return string(str)
 }
 
-// Get the thing's actions as an array.
+// ActionDescriptions Get the thing's actions as an array.
 //
 // @param {String?} actionName Optional action name to get descriptions for
 // @returns {Object} Action descriptions.
@@ -261,7 +264,7 @@ func (thing *Thing) EventDescriptions(eventName string) []byte {
 	return content
 }
 
-// Add a property to this thing.
+// AddProperty Add a property to this thing.
 //
 // @param property Property to add.
 func (thing *Thing) AddProperty(property *Property) {
@@ -269,7 +272,7 @@ func (thing *Thing) AddProperty(property *Property) {
 	thing.properties[property.Name()] = property
 }
 
-// Remove a property from this thing.
+// RemoveProperty Remove a property from this thing.
 //
 // @param property Property to remove.
 func (thing *Thing) RemoveProperty(property Property) {
@@ -289,7 +292,7 @@ func (thing *Thing) findProperty(propertyName string) (*Property, bool) {
 	return &Property{}, false
 }
 
-// Get a property's value.
+// Property Get a property's value.
 //
 // @param propertyName Name of the property to get the value of
 // @param <T>          Type of the property value
@@ -301,7 +304,7 @@ func (thing *Thing) Property(propertyName string) *Value {
 	return &Value{}
 }
 
-// Get a mapping of all properties and their values.
+// Properties et a mapping of all properties and their values.
 //
 // @return JSON object of propertyName -&gt; value.
 func (thing *Thing) Properties() map[string]interface{} {
@@ -323,7 +326,7 @@ func (thing *Thing) hasProperty(propertyName string) bool {
 	return false
 }
 
-// Set a property value.
+// SetProperty Set a property value.
 //
 // @param propertyName Name of the property to set
 // @param value        Value to set
@@ -337,7 +340,7 @@ func (thing *Thing) SetProperty(propertyName string, value *Value) error {
 	return property.SetValue(value)
 }
 
-// Get an action.
+// Action Get an action.
 //
 // @param actionName Name of the action
 // @param actionId   ID of the action
@@ -356,7 +359,7 @@ func (thing *Thing) Action(actionName, actionID string) (action *Action) {
 	return action
 }
 
-// Add a new event and notify subscribers.
+// AddEvent Add a new event and notify subscribers.
 //
 // @param event The event that occurred.
 func (thing *Thing) AddEvent(event *Event) {
@@ -364,7 +367,7 @@ func (thing *Thing) AddEvent(event *Event) {
 	thing.EventNotify(event)
 }
 
-// Add an available event.
+// AddAvailableEvent Add an available event.
 //
 // @param name     Name of the event
 // @param metadata Event metadata, i.e. type, description, etc., as a
@@ -373,7 +376,7 @@ func (thing *Thing) AddAvailableEvent(name string, metadata json.RawMessage) {
 	thing.availableEvents[name] = NewAvailableEvent(metadata)
 }
 
-// Perform an action on the thing.
+// PerformAction Perform an action on the thing.
 //
 // @param actionName Name of the action
 // @param input      Any action inputs
@@ -416,13 +419,13 @@ func (thing *Thing) PerformAction(actionName string, input *json.RawMessage) *Ac
 	return action
 }
 
-// Remove an existing action.
+// RemoveAction Remove an existing action.
 //
 // @param actionName name of the action
 // @param actionId   ID of the action
 // @return Boolean indicating the presence of the action.
-func (thing *Thing) RemoveAction(actionName, actionId string) bool {
-	action := thing.Action(actionName, actionId)
+func (thing *Thing) RemoveAction(actionName, actionID string) bool {
+	action := thing.Action(actionName, actionID)
 	if action.ID() == "" {
 		return false
 	}
@@ -431,7 +434,7 @@ func (thing *Thing) RemoveAction(actionName, actionId string) bool {
 
 	actions := thing.actions[actionName]
 	for k, ac := range actions {
-		if ac != nil && ac.ID() == actionId {
+		if ac != nil && ac.ID() == actionID {
 			actions[k] = nil
 		}
 	}
@@ -439,7 +442,7 @@ func (thing *Thing) RemoveAction(actionName, actionId string) bool {
 	return true
 }
 
-// Add an available action.
+// AddAvailableAction Add an available action.
 //
 // @param name     Name of the action
 // @param metadata Action metadata, i.e. type, description, etc., as a
@@ -450,14 +453,14 @@ func (thing *Thing) AddAvailableAction(name string, metadata json.RawMessage, ac
 	thing.actions[name] = []*Action{}
 }
 
-// Add a new websocket subscriber.
+// AddSubscriber Add a new websocket subscriber.
 //
 // @param ws The websocket
 func (thing *Thing) AddSubscriber(wsID string, ws *websocket.Conn) {
 	thing.subscribers[wsID] = ws
 }
 
-// Remove a websocket subscriber.
+// RemoveSubscriber Remove a websocket subscriber.
 //
 // @param ws The websocket
 func (thing *Thing) RemoveSubscriber(name string, ws *websocket.Conn) {
@@ -470,13 +473,13 @@ func (thing *Thing) RemoveSubscriber(name string, ws *websocket.Conn) {
 	}
 }
 
-// Add a new websocket subscriber to an event.
+// AddEventSubscriber Add a new websocket subscriber to an event.
 //
 // @param name Name of the event
 // @param ws   The websocket
 func (thing *Thing) AddEventSubscriber() {}
 
-// Remove a websocket subscriber from an event.
+// RemoveEventSubscriber Remove a websocket subscriber from an event.
 //
 // @param name Name of the event
 // @param ws   The websocket
@@ -498,7 +501,7 @@ type message struct {
 	Data        json.RawMessage `json:"data"`
 }
 
-// Notify all subscribers of a property change.
+// PropertyNotify Notify all subscribers of a property change.
 //
 // @param property The property that changed
 func (thing *Thing) PropertyNotify(property Property) error {
@@ -511,14 +514,14 @@ func (thing *Thing) PropertyNotify(property Property) error {
 		return err
 	}
 	for _, sub := range thing.subscribers {
-		if err := sub.WriteJSON(msg);err != nil {
+		if err := sub.WriteJSON(msg); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-// Notify all subscribers of an action status change.
+// ActionNotify Notify all subscribers of an action status change.
 //
 // @param action The action whose status changed
 func (thing *Thing) ActionNotify(action *Action) error {
@@ -531,14 +534,14 @@ func (thing *Thing) ActionNotify(action *Action) error {
 		return err
 	}
 	for _, sub := range thing.subscribers {
-		if err := sub.WriteJSON(msg);err != nil {
+		if err := sub.WriteJSON(msg); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-// Notify all subscribers of an event.
+// EventNotify Notify all subscribers of an event.
 //
 // @param event The event that occurred
 func (thing *Thing) EventNotify(event *Event) error {
@@ -555,34 +558,34 @@ func (thing *Thing) EventNotify(event *Event) error {
 		return err
 	}
 	for _, sub := range thing.subscribers {
-		if err := sub.WriteJSON(msg);err != nil {
+		if err := sub.WriteJSON(msg); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-// Class to describe an event available for subscription.
+// AvailableEvent Class to describe an event available for subscription.
 type AvailableEvent struct {
 	metadata    json.RawMessage
 	subscribers map[string]*websocket.Conn
 }
 
-// Initialize the object.
+// NewAvailableEvent Initialize the object.
 //
 // @param metadata The event metadata
 func NewAvailableEvent(metadata json.RawMessage) *AvailableEvent {
 	return &AvailableEvent{metadata: metadata, subscribers: make(map[string]*websocket.Conn)}
 }
 
-// Get the event metadata.
+// Metadata Get the event metadata.
 //
 // @return The metadata.
 func (ae *AvailableEvent) Metadata() json.RawMessage {
 	return ae.metadata
 }
 
-// Class to describe an action available to be taken.
+// AvailableAction Class to describe an action available to be taken.
 type AvailableAction struct {
 	metadata json.RawMessage
 	action   *Action
@@ -590,7 +593,7 @@ type AvailableAction struct {
 	cls      Actioner
 }
 
-// Initialize the object.
+// NewAvailableAction Initialize the object.
 //
 // @param metadata The action metadata
 // @param action   Instance for the action
@@ -616,7 +619,7 @@ func (ac *AvailableAction) getCls() Actioner {
 	return ac.cls
 }
 
-// Get the action metadata.
+// Metadata Get the action metadata.
 //
 // @return The metadata.
 func (ac *AvailableAction) Metadata() []byte {
@@ -624,14 +627,14 @@ func (ac *AvailableAction) Metadata() []byte {
 	return metaData
 }
 
-// Get the class to instantiate for the action.
+// Action Get the class to instantiate for the action.
 //
 // @return The class.
 func (ac *AvailableAction) Action() *Action {
 	return ac.action
 }
 
-// Validate the input for a new action.
+// ValidateActionInput Validate the input for a new action.
 //
 // @param actionInput The input to validate
 // @return Boolean indicating validation success.

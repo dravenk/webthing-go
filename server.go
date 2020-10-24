@@ -203,35 +203,78 @@ func (mt *MultipleThings) Name() string {
 	return mt.name
 }
 
-// BaseHandler Base handler that is initialized with a list of things.
-type BaseHandler interface {
+// // BaseHandler Base handler that is initialized with a list of things.
+// type BaseHandler interface {
+// 	Get(w http.ResponseWriter, r *http.Request)
+// 	Post(w http.ResponseWriter, r *http.Request)
+// 	Put(w http.ResponseWriter, r *http.Request)
+// 	Delete(w http.ResponseWriter, r *http.Request)
+// }
+
+// GetInterface Implementation of http Get menthod.
+type GetInterface interface {
 	Get(w http.ResponseWriter, r *http.Request)
+}
+
+// PostInterface Implementation of http Post menthod.
+type PostInterface interface {
 	Post(w http.ResponseWriter, r *http.Request)
+}
+
+// PutInterface Implementation of http Put menthod.
+type PutInterface interface {
 	Put(w http.ResponseWriter, r *http.Request)
+}
+
+// DeleteInterface Implementation of http Delete menthod.
+type DeleteInterface interface {
 	Delete(w http.ResponseWriter, r *http.Request)
 }
 
 // BaseHandle Base handler that is initialized with a list of things.
-func BaseHandle(h BaseHandler, w http.ResponseWriter, r *http.Request) {
+// func BaseHandle(h BaseHandler, w http.ResponseWriter, r *http.Request) {
+func BaseHandle(h interface{}, w http.ResponseWriter, r *http.Request) {
 	corsResponse(w)
 	jsonResponse(w)
 	switch r.Method {
 	case http.MethodGet:
-		h.Get(w, r)
+		if base, ok := h.(GetInterface); ok {
+			base.Get(w, r)
+			return
+		}
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
 	case http.MethodPost:
-		h.Post(w, r)
+		if base, ok := h.(PostInterface); ok {
+			base.Post(w, r)
+			return
+		}
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
 	case http.MethodPut:
-		h.Put(w, r)
+		if base, ok := h.(PutInterface); ok {
+			base.Put(w, r)
+			return
+		}
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
 	case http.MethodDelete:
-		h.Delete(w, r)
+		if base, ok := h.(DeleteInterface); ok {
+			base.Delete(w, r)
+			return
+		}
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
 	}
 }
 
+// ThingsHandle things struct.
 type ThingsHandle struct {
 	Things   []*Thing
 	basePath string
 }
 
+// Handle handle request.
 func (h *ThingsHandle) Handle(w http.ResponseWriter, r *http.Request) {
 	if len(h.Things) == 1 {
 		thingHandle := &ThingHandle{h.Things[0]}
@@ -242,6 +285,10 @@ func (h *ThingsHandle) Handle(w http.ResponseWriter, r *http.Request) {
 	BaseHandle(h, w, r)
 }
 
+// Get Handle a Get request.
+//
+// @param {Object} r The request object
+// @param {Object} w The response object
 func (h *ThingsHandle) Get(w http.ResponseWriter, r *http.Request) {
 
 	var things []json.RawMessage
@@ -256,18 +303,20 @@ func (h *ThingsHandle) Get(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func (h *ThingsHandle) Post(w http.ResponseWriter, r *http.Request)   {}
-func (h *ThingsHandle) Put(w http.ResponseWriter, r *http.Request)    {}
-func (h *ThingsHandle) Delete(w http.ResponseWriter, r *http.Request) {}
-
+// ThingHandle Handle a request to thing.
 type ThingHandle struct {
 	*Thing
 }
 
+// Handle a request to /thing.
 func (h *ThingHandle) Handle(w http.ResponseWriter, r *http.Request) {
 	BaseHandle(h, w, r)
 }
 
+// Get Handle a Get request.
+//
+// @param {Object} r The request object
+// @param {Object} w The response object
 func (h *ThingHandle) Get(w http.ResponseWriter, r *http.Request) {
 	base := h.Thing.AsThingDescription()
 
@@ -278,9 +327,9 @@ func (h *ThingHandle) Get(w http.ResponseWriter, r *http.Request) {
 	// if r.URL.Scheme != "" {
 	// 	scheme = r.URL.Scheme
 	// }
-	wsHref := fmt.Sprintf("%s://%s%s",scheme, r.Host, h.Href());
+	wsHref := fmt.Sprintf("%s://%s%s", scheme, r.Host, h.Href())
 	ls["links"] = append(ls["links"], Link{
-		Rel:       "alternate",
+		Rel:  "alternate",
 		Href: strings.TrimRight(wsHref+"/"+h.Href(), "/"),
 	})
 	var desc map[string]interface{}
@@ -307,17 +356,12 @@ func (h *ThingHandle) Get(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func (h *ThingHandle) Post(w http.ResponseWriter, r *http.Request)   {}
-func (h *ThingHandle) Put(w http.ResponseWriter, r *http.Request)    {}
-func (h *ThingHandle) Delete(w http.ResponseWriter, r *http.Request) {}
-
-/**
- * Handle a request to /properties.
- */
+// PropertiesHandle Handle a request to /properties.
 type PropertiesHandle struct {
 	*ThingHandle
 }
 
+// Handle Handle a request to /properties.
 func (h *PropertiesHandle) Handle(w http.ResponseWriter, r *http.Request) {
 	if name, err := resource(trimSlash(r.RequestURI)); err == nil {
 		propertyHandle := &PropertyHandle{h, h.properties[name]}
@@ -347,6 +391,10 @@ func validPath() *regexp.Regexp {
 	return regexp.MustCompile("^/(properties|actions|events)/([a-zA-Z0-9]+)$")
 }
 
+// Get Handle a Get request.
+//
+// @param {Object} r The request object
+// @param {Object} w The response object
 func (h *PropertiesHandle) Get(w http.ResponseWriter, r *http.Request) {
 	content, err := json.Marshal(h.Thing.Properties())
 	if err != nil {
@@ -357,18 +405,13 @@ func (h *PropertiesHandle) Get(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *PropertiesHandle) Post(w http.ResponseWriter, r *http.Request)   {}
-func (h *PropertiesHandle) Put(w http.ResponseWriter, r *http.Request)    {}
-func (h *PropertiesHandle) Delete(w http.ResponseWriter, r *http.Request) {}
-
-/**
- * Handle a request to /properties/<property>.
- */
+// PropertyHandle a request to /properties/<property>.
 type PropertyHandle struct {
 	*PropertiesHandle
 	*Property
 }
 
+// Handle a request to /properties/<property>.
 func (h *PropertyHandle) Handle(w http.ResponseWriter, r *http.Request) {
 	name, err := resource(trimSlash(r.RequestURI))
 	if err != nil {
@@ -379,7 +422,7 @@ func (h *PropertyHandle) Handle(w http.ResponseWriter, r *http.Request) {
 	BaseHandle(h, w, r)
 }
 
-// Handle a GET request.
+// Get Handle a GET request.
 //
 // @param {Object} r The request object
 // @param {Object} w The response object
@@ -399,10 +442,10 @@ func (h *PropertyHandle) Get(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Handle a PUT request.
+// Put Handle a PUT request.
 //
-// @param {Object} R The request object
-// @param {Object} W The response object
+// @param {Object} r The request object
+// @param {Object} w The response object
 func (h *PropertyHandle) Put(w http.ResponseWriter, r *http.Request) {
 
 	body, _ := ioutil.ReadAll(r.Body)
@@ -427,15 +470,15 @@ func (h *PropertyHandle) Put(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 	}
 }
-func (h *PropertyHandle) Delete(w http.ResponseWriter, r *http.Request) {}
 
-// Handle a request to /actions.
+// ActionsHandle Handle a request to /actions.
 type ActionsHandle struct {
 	*ThingHandle
 }
 
+// Handle a request to /actions.
 func (h *ActionsHandle) Handle(w http.ResponseWriter, r *http.Request) {
-	if name, actionID, err := h.MatchActionOrID(trimSlash(r.RequestURI)); err == nil {
+	if name, actionID, err := h.matchActionOrID(trimSlash(r.RequestURI)); err == nil {
 		action := h.Thing.Action(name, actionID)
 		actionHandle := &ActionHandle{h, name}
 		if actionID != "" {
@@ -449,7 +492,7 @@ func (h *ActionsHandle) Handle(w http.ResponseWriter, r *http.Request) {
 	BaseHandle(h, w, r)
 }
 
-func (h *ActionsHandle) MatchActionOrID(path string) (actionName, actionID string, err error) {
+func (h *ActionsHandle) matchActionOrID(path string) (actionName, actionID string, err error) {
 	re := regexp.MustCompile(`^/actions/(.*)/(.*)`)
 	name := re.FindStringSubmatch(path)
 	if name != nil {
@@ -530,19 +573,21 @@ func (h *ActionsHandle) Post(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func (h *ActionsHandle) Put(w http.ResponseWriter, r *http.Request)    {}
-func (h *ActionsHandle) Delete(w http.ResponseWriter, r *http.Request) {}
-
 // ActionHandle Handle a request to /actions/<action_name>.
 type ActionHandle struct {
 	*ActionsHandle
 	ActionName string
 }
 
+// Handle a request to /actions/<action_name>.
 func (h *ActionHandle) Handle(w http.ResponseWriter, r *http.Request) {
 	BaseHandle(h, w, r)
 }
 
+// Get Handle a GET request.
+//
+// @param {Object} r The request object
+// @param {Object} w The response object
 func (h *ActionHandle) Get(w http.ResponseWriter, r *http.Request) {
 	if descriptions := h.Thing.ActionDescriptions(h.ActionName); len(descriptions) > 0 {
 		content, _ := json.Marshal(descriptions)
@@ -553,6 +598,10 @@ func (h *ActionHandle) Get(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+// Post Handle a Post request.
+//
+// @param {Object} r The request object
+// @param {Object} w The response object
 func (h *ActionHandle) Post(w http.ResponseWriter, r *http.Request) {
 	body, _ := ioutil.ReadAll(r.Body)
 
@@ -596,15 +645,13 @@ func (h *ActionHandle) Post(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (h *ActionHandle) Put(w http.ResponseWriter, r *http.Request)    {}
-func (h *ActionHandle) Delete(w http.ResponseWriter, r *http.Request) {}
-
 // ActionIDHandle Handle a request to /actions/<action_name>/<action_id>.
 type ActionIDHandle struct {
 	*ActionHandle
 	*Action
 }
 
+// Handle a request to /actions/<action_name>/<action_id>.
 func (h *ActionIDHandle) Handle(w http.ResponseWriter, r *http.Request) {
 	if h.Action == nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -616,6 +663,10 @@ func (h *ActionIDHandle) Handle(w http.ResponseWriter, r *http.Request) {
 	BaseHandle(h, w, r)
 }
 
+// Get Handle a GET request.
+//
+// @param {Object} r The request object
+// @param {Object} w The response object
 func (h *ActionIDHandle) Get(w http.ResponseWriter, r *http.Request) {
 	if _, err := w.Write(h.Action.AsActionDescription()); err != nil {
 		fmt.Println(err)
@@ -624,8 +675,10 @@ func (h *ActionIDHandle) Get(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (h *ActionIDHandle) Post(w http.ResponseWriter, r *http.Request) {}
-func (h *ActionIDHandle) Put(w http.ResponseWriter, r *http.Request)  {}
+// Delete Handle a Delete request.
+//
+// @param {Object} r The request object
+// @param {Object} w The response object
 func (h *ActionIDHandle) Delete(w http.ResponseWriter, r *http.Request) {
 	if h.RemoveAction(h.ActionName, h.Action.ID()) {
 		w.WriteHeader(http.StatusNoContent)
@@ -633,11 +686,12 @@ func (h *ActionIDHandle) Delete(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Handle a request to /actions.
+// EventsHandle a request to /actions.
 type EventsHandle struct {
 	*ThingHandle
 }
 
+// Handle a request to /actions.
 func (h *EventsHandle) Handle(w http.ResponseWriter, r *http.Request) {
 	if name, err := resource(r.RequestURI); err == nil {
 		eventHandle := &EventHandle{h, name}
@@ -659,16 +713,14 @@ func (h *EventsHandle) Get(w http.ResponseWriter, r *http.Request) {
 	}
 	return
 }
-func (h *EventsHandle) Post(w http.ResponseWriter, r *http.Request)   {}
-func (h *EventsHandle) Put(w http.ResponseWriter, r *http.Request)    {}
-func (h *EventsHandle) Delete(w http.ResponseWriter, r *http.Request) {}
 
-// Handle a request to /actions.
+// EventHandle handle a request to /actions.
 type EventHandle struct {
 	*EventsHandle
 	eventName string
 }
 
+// Handle a request to /actions.
 func (h *EventHandle) Handle(w http.ResponseWriter, r *http.Request) {
 	BaseHandle(h, w, r)
 }
@@ -685,7 +737,3 @@ func (h *EventHandle) Get(w http.ResponseWriter, r *http.Request) {
 	}
 	return
 }
-
-func (h *EventHandle) Post(w http.ResponseWriter, r *http.Request)   {}
-func (h *EventHandle) Put(w http.ResponseWriter, r *http.Request)    {}
-func (h *EventHandle) Delete(w http.ResponseWriter, r *http.Request) {}
