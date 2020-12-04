@@ -46,4 +46,4 @@ For more information on Run Example, please check the wiki [Run-Example](https:/
 
 RESOURCES
   * https://github.com/dravenk/webthing-go/
-  * https://iot.mozilla.org/framework/
+  * https://webthings.io/framework/
