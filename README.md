@@ -1,6 +1,7 @@
 Web of Things
 ---
  [![GitHub forks](https://img.shields.io/github/forks/dravenk/webthing-go.svg?style=social&label=Fork&maxAge=2592000)](https://GitHub.com/dravenk/webthing-go/network/)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fdravenk%2Fwebthing-go.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fdravenk%2Fwebthing-go?ref=badge_shield)
  [![GitHub version](https://badge.fury.io/gh/dravenk%2Fwebthing-go.svg)](https://badge.fury.io/gh/dravenk%2Fwebthing-go)
  [![GoDoc](https://godoc.org/github.com/dravenk/webthing-go?status.png)](https://godoc.org/github.com/dravenk/webthing-go) 
  [![Codacy Badge](https://api.codacy.com/project/badge/Grade/bef38274a3cb4156b374bb76dc1670e5)](https://www.codacy.com/manual/dravenk/webthing-go?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=dravenk/webthing-go&amp;utm_campaign=Badge_Grade) 
@@ -47,3 +48,7 @@ For more information on Run Example, please check the wiki [Run-Example](https:/
 RESOURCES
   * https://github.com/dravenk/webthing-go/
   * https://webthings.io/framework/
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fdravenk%2Fwebthing-go.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fdravenk%2Fwebthing-go?ref=badge_large)
