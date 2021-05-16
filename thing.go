@@ -4,10 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/gorilla/websocket"
-	"github.com/xeipuuv/gojsonschema"
 	"path/filepath"
 	"strings"
+
+	"github.com/gorilla/websocket"
+	"github.com/xeipuuv/gojsonschema"
 )
 
 // Thing A Web Thing struct.
@@ -45,7 +46,7 @@ func NewThing(id, title string, atType []string, description string) *Thing {
 	thing := &Thing{}
 	thing.id = id
 	thing.title = title
-	thing.context = "https://iot.mozilla.org/schemas"
+	thing.context = "https://webthings.io/schemas"
 	thing.atType = atType
 	thing.description = description
 	thing.properties = make(map[string]*Property)
