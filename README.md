@@ -10,7 +10,7 @@ Web of Things
  [![Build Status](https://img.shields.io/docker/cloud/build/dravenk/webthing.svg)](https://cloud.docker.com/repository/docker/dravenk/webthing/builds)
 
 ### USAGE
-This library fully supports [Web Thing REST API](https://iot.mozilla.org/wot/).You can start building your Web of Thing by looking at [single-thing](https://github.com/dravenk/webthing-go/blob/master/examples/single-thing/single-thing.go). 
+This library fully supports [Web Thing REST API](https://webthings.io/api/#web-thing-rest-api).You can start building your Web of Thing by looking at [single-thing](https://github.com/dravenk/webthing-go/blob/master/examples/single-thing/single-thing.go). 
 
 #### Download and import
 This package name is called `webthing`. This project is called webthing-go to keep the naming consistent with the implementation of other languages. You just need to import this package the way golang normally imports a package.
