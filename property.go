@@ -76,10 +76,10 @@ func (property *Property) ValidateValue(value interface{}) error {
 		return err
 	}
 	if prop.ReadOnly {
-		return errors.New("Read-only property. ")
+		return errors.New(" Read-only property. ")
 	}
 	if !validate(prop.Type, value) {
-		return errors.New("Invalid property value. ")
+		return errors.New(" Invalid property value. ")
 	}
 
 	return nil

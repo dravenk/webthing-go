@@ -300,7 +300,6 @@ func (h *ThingsHandle) Get(w http.ResponseWriter, r *http.Request) {
 	if _, err := w.Write(content); err != nil {
 		fmt.Println(err)
 	}
-	return
 }
 
 // ThingHandle Handle a request to thing.
@@ -352,8 +351,6 @@ func (h *ThingHandle) Get(w http.ResponseWriter, r *http.Request) {
 	if _, err := w.Write(re); err != nil {
 		fmt.Println(err)
 	}
-
-	return
 }
 
 // PropertiesHandle Handle a request to /properties.
@@ -379,10 +376,11 @@ func trimSlash(path string) string {
 	}
 	return path
 }
+
 func resource(path string) (string, error) {
 	m := validPath().FindStringSubmatch(path)
 	if m == nil {
-		return "", errors.New("Invalid! ")
+		return "", errors.New(" Invalid! ")
 	}
 	return m[2], nil // The resource is the second subexpression.
 }
@@ -463,7 +461,7 @@ func (h *PropertyHandle) Put(w http.ResponseWriter, r *http.Request) {
 
 	description := make(map[string]interface{})
 	description[name] = h.Property.Value().Get()
-	content, err := json.Marshal(description)
+	content, _ := json.Marshal(description)
 
 	if _, err = w.Write(content); err != nil {
 		fmt.Println(err)
@@ -500,7 +498,7 @@ func (h *ActionsHandle) matchActionOrID(path string) (actionName, actionID strin
 	}
 	m := validPath().FindStringSubmatch(path)
 	if m == nil {
-		return "", "", errors.New("Invalid! ")
+		return "", "", errors.New(" Invalid! ")
 	}
 	return m[2], "", nil // The resource is the second subexpression.
 }
@@ -528,7 +526,6 @@ func (h *ActionsHandle) Get(w http.ResponseWriter, r *http.Request) {
 	if _, err := w.Write(content); err != nil {
 		fmt.Println(err)
 	}
-	return
 }
 
 // Post Handle a POST request.
@@ -562,15 +559,14 @@ func (h *ActionsHandle) Post(w http.ResponseWriter, r *http.Request) {
 
 			if len(obj) == 1 {
 				w.WriteHeader(http.StatusCreated)
-				_, err = w.Write(action.AsActionDescription())
+				w.Write(action.AsActionDescription())
 				return
 			}
 			description = append(description, action.AsActionDescription())
 		}
 	}
 	content, _ := json.Marshal(description)
-	_, err = w.Write(content)
-	return
+	w.Write(content)
 }
 
 // ActionHandle Handle a request to /actions/<action_name>.
@@ -595,7 +591,6 @@ func (h *ActionHandle) Get(w http.ResponseWriter, r *http.Request) {
 			fmt.Println(err)
 		}
 	}
-	return
 }
 
 // Post Handle a Post request.
@@ -630,7 +625,7 @@ func (h *ActionHandle) Post(w http.ResponseWriter, r *http.Request) {
 
 				if len(obj) == 1 {
 					w.WriteHeader(http.StatusCreated)
-					_, err = w.Write(action.AsActionDescription())
+					w.Write(action.AsActionDescription())
 					return
 				}
 
@@ -640,9 +635,7 @@ func (h *ActionHandle) Post(w http.ResponseWriter, r *http.Request) {
 	}
 	content, _ := json.Marshal(description)
 	w.WriteHeader(http.StatusCreated)
-	_, err = w.Write(content)
-	return
-
+	w.Write(content)
 }
 
 // ActionIDHandle Handle a request to /actions/<action_name>/<action_id>.
@@ -671,8 +664,6 @@ func (h *ActionIDHandle) Get(w http.ResponseWriter, r *http.Request) {
 	if _, err := w.Write(h.Action.AsActionDescription()); err != nil {
 		fmt.Println(err)
 	}
-	return
-
 }
 
 // Delete Handle a Delete request.
@@ -711,7 +702,6 @@ func (h *EventsHandle) Get(w http.ResponseWriter, r *http.Request) {
 			fmt.Println(err)
 		}
 	}
-	return
 }
 
 // EventHandle handle a request to /actions.
@@ -735,5 +725,4 @@ func (h *EventHandle) Get(w http.ResponseWriter, r *http.Request) {
 			fmt.Print(err)
 		}
 	}
-	return
 }

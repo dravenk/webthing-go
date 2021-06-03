@@ -3,13 +3,14 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/dravenk/webthing-go"
-	"github.com/google/uuid"
 	"log"
 	"math"
 	"math/rand"
 	"net/http"
 	"time"
+
+	"github.com/dravenk/webthing-go"
+	"github.com/google/uuid"
 )
 
 func main() {
@@ -39,7 +40,7 @@ func MakeDimmableLight() *webthing.Thing {
     "type": "boolean",
     "title": "On/Off",
     "description": "Whether the lamp is turned on"
-	}`)
+  }`)
 	onValue := webthing.NewValue(true, func(i interface{}) {
 		fmt.Println("On-State is now ", i)
 	})
@@ -57,8 +58,8 @@ func MakeDimmableLight() *webthing.Thing {
     "description": "The level of light from 0-100",
     "minimum": 0,
     "maximum": 100,
-	"unit": "percent"
-	}`)
+    "unit": "percent"
+  }`)
 
 	thing.AddProperty(webthing.NewProperty(thing,
 		"brightness",
@@ -72,27 +73,27 @@ func MakeDimmableLight() *webthing.Thing {
     "title": "Fade",
     "description": "Fade the lamp to a given level",
     "input": {
-        "@type": "FadeAction",
-        "type": "object",
-        "properties": {
-			"required": [
-				"brightness",
-				"duration"
-			],
-            "brightness": {
-                "type": "integer",
-                "minimum": 0,
-                "maximum": 100,
-				"unit": "percent"
-            },
-            "duration": {
-                "type": "integer",
-                "minimum": 1,
-                "unit": "milliseconds"
-            }
+      "@type": "FadeAction",
+      "type": "object",
+      "properties": {
+        "required": [
+          "brightness",
+          "duration"
+        ],
+        "brightness": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "unit": "percent"
+        },
+        "duration": {
+          "type": "integer",
+          "minimum": 1,
+          "unit": "milliseconds"
         }
+      }
     }
-	}`)
+  }`)
 	fade := &FadeAction{}
 	thing.AddAvailableAction("fade", fadeMeta, fade)
 
@@ -160,7 +161,7 @@ func FakeGpioHumiditySensor() *webthing.Thing {
         "maximum": 100,
         "unit": "percent",
         "readOnly": true
-	}`)
+  }`)
 	thing.AddProperty(webthing.NewProperty(
 		thing,
 		"level",

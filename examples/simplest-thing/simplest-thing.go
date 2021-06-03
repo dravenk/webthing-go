@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
-	"github.com/dravenk/webthing-go"
 	"log"
 	"net/http"
+
+	"github.com/dravenk/webthing-go"
 )
 
 func main() {
@@ -21,11 +22,11 @@ func makeThing() *webthing.Thing {
 		fmt.Println("Change: ", i)
 	})
 	meta := []byte(`{
-	'@type': 'OnOffProperty',
-	title: 'On/Off',
-	type: 'boolean',
-	description: 'Whether the output is changed',
-	}`)
+    '@type': 'OnOffProperty',
+    title: 'On/Off',
+    type: 'boolean',
+    description: 'Whether the output is changed',
+  }`)
 	property := webthing.NewProperty(thing, "on", value, meta)
 	thing.AddProperty(property)
 

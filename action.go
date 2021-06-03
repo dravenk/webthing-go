@@ -176,7 +176,6 @@ func (action *Action) Start() *Action {
 		if e := recover(); e != nil {
 			fmt.Println("Perform Action encountered an error")
 		}
-		return
 	}()
 
 	action.status = "pending"

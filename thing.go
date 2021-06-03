@@ -320,7 +320,7 @@ func (thing *Thing) Properties() map[string]interface{} {
 //
 // @param propertyName The property to look for
 // @return Indication of property presence.
-func (thing *Thing) hasProperty(propertyName string) bool {
+func (thing *Thing) HasProperty(propertyName string) bool {
 	if _, ok := thing.properties[propertyName]; ok {
 		return true
 	}
@@ -465,9 +465,8 @@ func (thing *Thing) AddSubscriber(wsID string, ws *websocket.Conn) {
 //
 // @param ws The websocket
 func (thing *Thing) RemoveSubscriber(name string, ws *websocket.Conn) {
-	if _, ok := thing.subscribers[name]; ok {
-		delete(thing.subscribers, name)
-	}
+
+	delete(thing.subscribers, name)
 
 	for name := range thing.availableEvents {
 		thing.RemoveEventSubscriber(name, ws)
@@ -485,14 +484,15 @@ func (thing *Thing) AddEventSubscriber() {}
 // @param name Name of the event
 // @param ws   The websocket
 func (thing *Thing) RemoveEventSubscriber(name string, ws *websocket.Conn) error {
+
+	delete(thing.availableEvents, name)
+
 	if _, ok := thing.availableEvents[name]; ok {
 		for _, eventWS := range thing.availableEvents[name].subscribers {
-			err := eventWS.Close()
-			if err != nil {
+			if err := eventWS.Close(); err != nil {
 				return err
 			}
 		}
-		delete(thing.availableEvents, name)
 	}
 	return nil
 }
@@ -644,9 +644,6 @@ func (ac *AvailableAction) ValidateActionInput(actionInput interface{}) bool {
 		return true
 	}
 	_, err := json.Marshal(actionInput)
-	if err != nil {
-		return false
-	}
 
-	return true
+	return err == nil
 }

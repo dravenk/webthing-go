@@ -51,7 +51,7 @@ func MakeThing() *webthing.Thing {
     "description": "The level of light from 0-100",
     "minimum": 0,
     "maximum": 100,
-	"unit": "percent"
+	  "unit": "percent"
 	}`)
 
 	thing.AddProperty(webthing.NewProperty(thing,
@@ -64,25 +64,25 @@ func MakeThing() *webthing.Thing {
     	"title": "Fade",
     	"description": "Fade the lamp to a given level",
     	"input": {
-    	    "@type": "FadeAction",
-			"type": "object",
-			"required": [
-				"brightness",
-				"duration"
-			],
-    	    "properties": {
-    	        "brightness": {
-    	            "type": "integer",
-    	            "minimum": 0,
-    	            "maximum": 100,
-					"unit": "percent"
-    	        },
-    	        "duration": {
-    	            "type": "integer",
-    	            "minimum": 1,
-    	            "unit": "milliseconds"
-    	        }
-    	    }
+    	  "@type": "FadeAction",
+			  "type": "object",
+			  "required": [
+			  	"brightness",
+			  	"duration"
+			  ],
+    	  "properties": {
+    	      "brightness": {
+    	          "type": "integer",
+    	          "minimum": 0,
+    	          "maximum": 100,
+				"unit": "percent"
+    	      },
+    	      "duration": {
+    	          "type": "integer",
+    	          "minimum": 1,
+    	          "unit": "milliseconds"
+    	      }
+    	  }
     	}
 	}`)
 	fade := &FadeAction{}
@@ -97,8 +97,8 @@ func MakeThing() *webthing.Thing {
         }`))
 
 	toggleMeta := []byte(`{
-	"title": "Toggle",
-	"description": "Toggles a boolean state on and off."
+	  "title": "Toggle",
+	  "description": "Toggles a boolean state on and off."
 	}`)
 	toggle := &ToggleAction{}
 	thing.AddAvailableAction("toggle", toggleMeta, toggle)
