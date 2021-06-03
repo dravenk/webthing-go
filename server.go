@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -329,7 +330,7 @@ func (h *ThingHandle) Get(w http.ResponseWriter, r *http.Request) {
 	wsHref := fmt.Sprintf("%s://%s%s", scheme, r.Host, h.Href())
 	ls["links"] = append(ls["links"], Link{
 		Rel:  "alternate",
-		Href: strings.TrimRight(wsHref+"/"+h.Href(), "/"),
+		Href: filepath.Clean(strings.TrimRight(wsHref+"/"+h.Href(), "/")),
 	})
 	var desc map[string]interface{}
 	if err := json.Unmarshal(base, &desc); err != nil {
@@ -380,13 +381,14 @@ func trimSlash(path string) string {
 func resource(path string) (string, error) {
 	m := validPath().FindStringSubmatch(path)
 	if m == nil {
-		return "", errors.New(" Invalid! ")
+		return "", errors.New(" Invalid path! ")
 	}
 	return m[2], nil // The resource is the second subexpression.
 }
 
 func validPath() *regexp.Regexp {
-	return regexp.MustCompile("^/(properties|actions|events)/([a-zA-Z0-9]+)$")
+	// return regexp.MustCompile(`\/(properties|actions|events)\/([a-zA-Z0-9]+)$`)
+	return regexp.MustCompile(`(properties|actions|events)\/([a-zA-Z0-9]+)`)
 }
 
 // Get Handle a Get request.

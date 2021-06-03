@@ -3,12 +3,13 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/dravenk/webthing-go"
-	"github.com/google/uuid"
 	"log"
 	"math/rand"
 	"net/http"
 	"time"
+
+	"github.com/dravenk/webthing-go"
+	"github.com/google/uuid"
 )
 
 func main() {

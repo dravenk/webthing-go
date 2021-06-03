@@ -41,6 +41,20 @@ type ThingMember struct {
 	Links       []Link                     `json:"links"`
 }
 
+func NewThingMember(thing *Thing) *ThingMember {
+	th := &ThingMember{
+		ID:          thing.id,
+		Title:       thing.title,
+		Context:     thing.context,
+		AtType:      thing.atType,
+		Description: thing.description,
+		Properties:  json.RawMessage{},
+		Actions:     make(map[string]json.RawMessage),
+		Events:      make(map[string]json.RawMessage),
+	}
+	return th
+}
+
 // NewThing create a thing.
 func NewThing(id, title string, atType []string, description string) *Thing {
 	thing := &Thing{}
@@ -67,24 +81,7 @@ type Link struct {
 	MediaType string `json:"mediaType,omitempty"`
 }
 
-// AsThingDescription retrun []byte data of thing struct.
-// Return the thing state as a Thing Description.
-// @returns {Object} Current thing state
-func (thing *Thing) AsThingDescription() []byte {
-
-	th := &ThingMember{
-		ID:          thing.id,
-		Title:       thing.title,
-		Context:     thing.context,
-		AtType:      thing.atType,
-		Description: thing.description,
-		Properties:  json.RawMessage{},
-		Actions:     make(map[string]json.RawMessage),
-		Events:      make(map[string]json.RawMessage),
-	}
-
-	th.Properties = []byte(thing.PropertyDescriptions())
-
+func (th *ThingMember) availableActionsDesc(thing *Thing) {
 	for name := range thing.availableActions {
 		meta := thing.availableActions[name].Metadata()
 		var m map[string]interface{}
@@ -96,7 +93,9 @@ func (thing *Thing) AsThingDescription() []byte {
 		obj, _ := json.Marshal(m)
 		th.Actions[name] = obj
 	}
+}
 
+func (th *ThingMember) availableEventsDesc(thing *Thing) {
 	for name := range thing.availableEvents {
 		meta, _ := thing.availableEvents[name].Metadata().MarshalJSON()
 		var m map[string]interface{}
@@ -108,7 +107,9 @@ func (thing *Thing) AsThingDescription() []byte {
 		obj, _ := json.Marshal(m)
 		th.Events[name] = obj
 	}
+}
 
+func (th *ThingMember) links(thing *Thing) {
 	for _, name := range []string{"properties", "actions", "events"} {
 		th.Links = append(th.Links, Link{
 			Rel:  name,
@@ -120,9 +121,22 @@ func (thing *Thing) AsThingDescription() []byte {
 		th.Links = append(th.Links, Link{
 			Rel:       "alternate",
 			MediaType: "text/html",
-			Href:      thing.UIHref(),
+			Href:      filepath.Clean(thing.UIHref()),
 		})
 	}
+}
+
+// AsThingDescription retrun []byte data of thing struct.
+// Return the thing state as a Thing Description.
+// @returns {Object} Current thing state
+func (thing *Thing) AsThingDescription() []byte {
+
+	th := NewThingMember(thing)
+
+	th.Properties = []byte(thing.PropertyDescriptions())
+	th.availableActionsDesc(thing)
+	th.availableEventsDesc(thing)
+	th.links(thing)
 
 	thingDescription, err := json.Marshal(th)
 	if err != nil {
