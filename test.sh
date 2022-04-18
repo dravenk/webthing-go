@@ -11,7 +11,7 @@ pip3 install --user -r webthing-tester/requirements.txt
 # go run examples/single-thing/single-thing.go & EXAMPLE_PID=$!
 # EXAMPLE_PID = go pid, not single-thing pid
 
-go run examples/single-thing/single-thing.go & EXAMPLE_PID=$!
+go run examples/single-thing/single-thing.go >/dev/null 2>&1 &
 
 sleep 5
 
@@ -24,19 +24,22 @@ function get_pid_by_listened_port() {
 }
 get_pid_by_listened_port
 
-./webthing-tester/test-client.py --skip-websocket --debug || ! echo 'Test failed' ; killall -9 single-thing
+# ./webthing-tester/test-client.py --skip-websocket --debug || ! echo 'Test failed' ; killall -9 single-thing
+./webthing-tester/test-client.py --skip-websocket || ! echo 'Test failed' ; killall -9 single-thing
 
+echo "single-thing test done!"
 # kill -9 $EXAMPLE_PID
 
 
 # build and test the multiple-things example
 # ignore all print to std. >/dev/null 2>&1 &
-go run examples/multiple-things/multiple-things.go >/dev/null 2>&1 &
+go run examples/multiple-things/multiple-things.go > /dev/null 2>&1 &
 sleep 5
 get_pid_by_listened_port
 
 # ignore test result and kill process
-./webthing-tester/test-client.py --path-prefix "/0" --skip-websocket --debug || ! echo 'Test failed' ; killall -9 multiple-things
+# ./webthing-tester/test-client.py --path-prefix "/0" --skip-websocket --debug || ! echo 'Test failed' ; killall -9 multiple-things
+./webthing-tester/test-client.py --path-prefix "/0" --skip-websocket || ! echo 'Test failed' ; killall -9 multiple-things
 
 killall -9 multiple-things
 # kill -9 $EXAMPLE_PID

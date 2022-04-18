@@ -396,10 +396,10 @@ func (thing *Thing) AddAvailableEvent(name string, metadata json.RawMessage) {
 // @param actionName Name of the action
 // @param input      Any action inputs
 // @return The action that was created.
-func (thing *Thing) PerformAction(actionName string, input *json.RawMessage) *Action {
+func (thing *Thing) PerformAction(actionName string, input *json.RawMessage) (*Action, error) {
 	if _, ok := thing.availableActions[actionName]; !ok {
 		fmt.Print("Not found action: ", actionName)
-		return nil
+		return nil, errors.New("Not found action: " + actionName)
 	}
 
 	actionType := thing.availableActions[actionName]
@@ -408,14 +408,18 @@ func (thing *Thing) PerformAction(actionName string, input *json.RawMessage) *Ac
 	documentLoader := gojsonschema.NewGoLoader(input)
 	result, err := gojsonschema.Validate(schemaLoader, documentLoader)
 	if err != nil {
-		return nil
+		fmt.Println(err)
+		return nil, err
 	}
+	// if result.Valid() {
+	// 	fmt.Printf("The document is valid\n")
+	// }
 	if !result.Valid() {
 		fmt.Printf("The document is not valid. see errors :\n")
 		for _, desc := range result.Errors() {
 			fmt.Printf("- %s\n", desc)
 		}
-		return nil
+		return nil, err
 	}
 	// if !actionType.ValidateActionInput(input) {
 	// 	return nil
@@ -431,7 +435,7 @@ func (thing *Thing) PerformAction(actionName string, input *json.RawMessage) *Ac
 	thing.ActionNotify(action)
 	thing.actions[actionName] = append(thing.actions[actionName], action)
 
-	return action
+	return action, nil
 }
 
 // RemoveAction Remove an existing action.
