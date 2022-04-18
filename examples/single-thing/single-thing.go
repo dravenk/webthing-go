@@ -76,7 +76,7 @@ func MakeThing() *webthing.Thing {
     	          "type": "integer",
     	          "minimum": 0,
     	          "maximum": 100,
-				"unit": "percent"
+								"unit": "percent"
     	      },
     	      "duration": {
     	          "type": "integer",

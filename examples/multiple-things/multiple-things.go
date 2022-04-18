@@ -75,11 +75,11 @@ func MakeDimmableLight() *webthing.Thing {
     "input": {
       "@type": "FadeAction",
       "type": "object",
+			"required": [
+				"brightness",
+				"duration"
+			],
       "properties": {
-        "required": [
-          "brightness",
-          "duration"
-        ],
         "brightness": {
           "type": "integer",
           "minimum": 0,
@@ -121,23 +121,28 @@ func (fade *FadeAction) Generator(thing *webthing.Thing) *webthing.Action {
 
 // PerformAction Perform an action.
 func (fade *FadeAction) PerformAction() *webthing.Action {
+	fmt.Println("Perform fade action…...: ", fade.Name(), " | UUID: ", fade.ID())
 	thing := fade.Thing()
 	params, _ := fade.Input().MarshalJSON()
 
 	input := make(map[string]interface{})
 	if err := json.Unmarshal(params, &input); err != nil {
-		fmt.Println(err)
+		fmt.Println("PerformAction error ",err)
+		return nil
 	}
 	if brightness, ok := input["brightness"]; ok {
+		fmt.Println("Set brightness value: ", brightness)
 		thing.Property("brightness").Set(brightness)
 	}
 	if duration, ok := input["duration"]; ok {
+		fmt.Println("Fade duration: ", duration)
 		time.Sleep(time.Duration(int64(duration.(float64))) * time.Millisecond)
 	}
 
 	event := webthing.NewEvent(thing, "overheated", []byte(fmt.Sprintln(102)))
 	thing.AddEvent(event)
 
+	fmt.Println("Fade action Done...", fade.Name())
 	return fade.Action
 }
 

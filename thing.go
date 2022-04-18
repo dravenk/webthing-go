@@ -407,7 +407,12 @@ func (thing *Thing) PerformAction(actionName string, input *json.RawMessage) (*A
 	schemaLoader := gojsonschema.NewGoLoader(actionType.schema)
 	documentLoader := gojsonschema.NewGoLoader(input)
 	result, err := gojsonschema.Validate(schemaLoader, documentLoader)
+
 	if err != nil {
+		str1,_:= schemaLoader.LoadJSON()
+		fmt.Println(str1)
+		str2,_ := documentLoader.LoadJSON()
+		fmt.Println(str2)
 		fmt.Println(err)
 		return nil, err
 	}
