@@ -27,7 +27,7 @@ jobs:
       run: |
         go test -v -cover ./... -coverprofile coverage.out -coverpkg ./...
         go tool cover -func coverage.out -o coverage.out  # Replaces coverage.out with the analysis of coverage.out
-    
+
   check-web-api:
     runs-on: ubuntu-latest
     steps:
@@ -40,4 +40,3 @@ jobs:
 
     - name: Check for compatibility
       run: ./test.sh
-      
