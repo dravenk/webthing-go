@@ -238,24 +238,26 @@ func (thing *Thing) PropertyDescriptions() string {
 //
 // @param {String?} actionName Optional action name to get descriptions for
 // @returns {Object} Action descriptions.
-func (thing *Thing) ActionDescriptions(actionName string) []json.RawMessage {
-	var descriptions []json.RawMessage
-	if actionName == "" {
-		for name := range thing.actions {
-			for _, action := range thing.actions[name] {
+func (thing *Thing) ActionDescriptions(actionName string) (descriptions []json.RawMessage) {
+	if actionName != "" {
+		return actionsDescription(thing, descriptions, actionName)
+	}
+
+	for name := range thing.actions {
+		descriptions = actionsDescription(thing, descriptions, name)
+	}
+
+	return descriptions
+}
+
+func actionsDescription(thing *Thing, descriptions []json.RawMessage, actionName string) []json.RawMessage {
+	if actions, ok := thing.actions[actionName]; ok {
+		for _, action := range actions {
+			if action != nil {
 				descriptions = append(descriptions, []byte(action.AsActionDescription()))
 			}
 		}
-	} else {
-		if actions, ok := thing.actions[actionName]; ok {
-			for _, action := range actions {
-				if action != nil {
-					descriptions = append(descriptions, []byte(action.AsActionDescription()))
-				}
-			}
-		}
 	}
-
 	return descriptions
 }
 
@@ -409,9 +411,9 @@ func (thing *Thing) PerformAction(actionName string, input *json.RawMessage) (*A
 	result, err := gojsonschema.Validate(schemaLoader, documentLoader)
 
 	if err != nil {
-		str1,_:= schemaLoader.LoadJSON()
+		str1, _ := schemaLoader.LoadJSON()
 		fmt.Println(str1)
-		str2,_ := documentLoader.LoadJSON()
+		str2, _ := documentLoader.LoadJSON()
 		fmt.Println(str2)
 		fmt.Println(err)
 		return nil, err

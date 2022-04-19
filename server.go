@@ -39,24 +39,7 @@ func NewWebThingServer(thingType ThingsType, httpServer *http.Server, basePath s
 		actionsHandle := &ActionsHandle{thingHandle}
 		eventsHandle := &EventsHandle{thingHandle}
 
-		http.HandleFunc(prePath, thingHandle.Handle)
-		http.HandleFunc(prePath+"/properties", propertiesHandle.Handle)
-		http.HandleFunc(prePath+"/properties/", propertiesHandle.Handle)
-		http.HandleFunc(prePath+"/actions", actionsHandle.Handle)
-		http.HandleFunc(prePath+"/actions/", actionsHandle.Handle)
-		http.HandleFunc(prePath+"/events", eventsHandle.Handle)
-		http.HandleFunc(prePath+"/events/", eventsHandle.Handle)
-
-		http.HandleFunc(preIdx+"/properties", propertiesHandle.Handle)
-		http.HandleFunc(preIdx+"/properties/", propertiesHandle.Handle)
-		http.HandleFunc(preIdx+"/actions", actionsHandle.Handle)
-		http.HandleFunc(preIdx+"/actions/", actionsHandle.Handle)
-		http.HandleFunc(preIdx+"/events", eventsHandle.Handle)
-		http.HandleFunc(preIdx+"/events/", eventsHandle.Handle)
-
-		if preIdx != "" {
-			http.HandleFunc(preIdx, thingHandle.Handle)
-		}
+		handlerfuncs(prePath, preIdx, thingHandle, propertiesHandle, actionsHandle, eventsHandle)
 		return server
 	}
 
@@ -69,25 +52,37 @@ func NewWebThingServer(thingType ThingsType, httpServer *http.Server, basePath s
 		actionsHandle := &ActionsHandle{thingHandle}
 		eventsHandle := &EventsHandle{thingHandle}
 
-		http.HandleFunc(prePath, thingHandle.Handle)
-		http.HandleFunc(prePath+"/properties", propertiesHandle.Handle)
-		http.HandleFunc(prePath+"/properties/", propertiesHandle.Handle)
-		http.HandleFunc(prePath+"/actions", actionsHandle.Handle)
-		http.HandleFunc(prePath+"/actions/", actionsHandle.Handle)
-		http.HandleFunc(prePath+"/events", eventsHandle.Handle)
-		http.HandleFunc(prePath+"/events/", eventsHandle.Handle)
-
-		http.HandleFunc(preIdx+"/properties", propertiesHandle.Handle)
-		http.HandleFunc(preIdx+"/properties/", propertiesHandle.Handle)
-		http.HandleFunc(preIdx+"/actions", actionsHandle.Handle)
-		http.HandleFunc(preIdx+"/actions/", actionsHandle.Handle)
-		http.HandleFunc(preIdx+"/events", eventsHandle.Handle)
-		http.HandleFunc(preIdx+"/events/", eventsHandle.Handle)
-
-		http.HandleFunc(preIdx, thingHandle.Handle)
+		handlerfuncs(prePath, preIdx, thingHandle, propertiesHandle, actionsHandle, eventsHandle)
 	}
 
 	return server
+}
+
+func handlerfuncs(prePath, preIdx string,
+	thingHandle *ThingHandle,
+	propertiesHandle *PropertiesHandle,
+	actionsHandle *ActionsHandle,
+	eventsHandle *EventsHandle,
+) {
+
+	http.HandleFunc(prePath, thingHandle.Handle)
+	http.HandleFunc(prePath+"/properties", propertiesHandle.Handle)
+	http.HandleFunc(prePath+"/properties/", propertiesHandle.Handle)
+	http.HandleFunc(prePath+"/actions", actionsHandle.Handle)
+	http.HandleFunc(prePath+"/actions/", actionsHandle.Handle)
+	http.HandleFunc(prePath+"/events", eventsHandle.Handle)
+	http.HandleFunc(prePath+"/events/", eventsHandle.Handle)
+
+	http.HandleFunc(preIdx+"/properties", propertiesHandle.Handle)
+	http.HandleFunc(preIdx+"/properties/", propertiesHandle.Handle)
+	http.HandleFunc(preIdx+"/actions", actionsHandle.Handle)
+	http.HandleFunc(preIdx+"/actions/", actionsHandle.Handle)
+	http.HandleFunc(preIdx+"/events", eventsHandle.Handle)
+	http.HandleFunc(preIdx+"/events/", eventsHandle.Handle)
+
+	if preIdx != "" {
+		http.HandleFunc(preIdx, thingHandle.Handle)
+	}
 }
 
 // Start Start listening for incoming connections.
